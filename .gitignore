@@ -1,0 +1,31 @@
+# 환경변수 (API 키 등 민감 정보)
+.env
+
+# Python 캐시 및 스크립트
+__pycache__/
+*.pyc
+*.pyo
+make_docx.py
+
+# Microsoft Office 임시 파일
+~$*
+*.docx
+*.xlsx
+
+# 설명서 HTML (플랫폼 본체만 배포)
+컨테이너_DP_매각_플랫폼_설명서.html
+컨테이너_DP_매각_플랫폼_설명서_A3.html
+
+# 스크린샷 및 이미지 (용량 절약)
+screenshot_*.jpeg
+screenshot_*.jpg
+sinokor_*.png
+platform_*.png
+docx_imgs/
+docx_imgs2/
+
+# 기획 문서
+*.md
+
+# 기타
+.vercel

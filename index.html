@@ -1,0 +1,2529 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장금상선·흥아라인 | 컨테이너 DP 매각 플랫폼</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0A1628;
+            --navy-mid: #1a3260;
+            --blue: #1a56db;
+            --blue-light: #3b82f6;
+            --teal: #0891b2;
+            --teal-light: #06b6d4;
+            --purple: #7c3aed;
+            --purple-light: #8b5cf6;
+            --slate: #374151;
+            --slate-light: #6b7280;
+            --red: #CC1200;
+            --red-dark: #A50F00;
+            --gold: #CC1200;
+            --gold-dark: #A50F00;
+            --bg: #f1f5f9;
+            --white: #ffffff;
+            --text-dark: #1e293b;
+            --text-mid: #475569;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+            --shadow-lg: 0 20px 40px -8px rgba(0,0,0,0.18), 0 8px 16px -4px rgba(0,0,0,0.06);
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: var(--bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+            letter-spacing: -0.01em;
+        }
+
+        /* ── NAV ── */
+        .nav {
+            background: #ffffff;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 68px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 0 #e5e7eb, 0 2px 12px rgba(0,0,0,0.06);
+            border-bottom: 3px solid var(--red);
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .nav-logo-sprite {
+            display: inline-block;
+            width: 155px; height: 51px;
+            background: url('https://www.sinokor.co.kr/homepage/kor/_Img/Layout/layout_sprite.png') no-repeat 0px -201px;
+            background-size: 350px;
+            flex-shrink: 0;
+        }
+        .nav-divider {
+            width: 1px; height: 32px; background: #d1d5db;
+            margin: 0 2px;
+        }
+        .nav-platform-badge {
+            font-size: 10.5px; font-weight: 700; color: #374151;
+            letter-spacing: 0.5px; text-transform: uppercase;
+            padding-left: 2px;
+        }
+        .nav-heung-a {
+            font-size: 11px; font-weight: 800; color: var(--navy);
+            letter-spacing: -0.2px; line-height: 1.2;
+        }
+        .nav-heung-a small {
+            display: block; font-size: 9px; font-weight: 500;
+            color: #9ca3af; letter-spacing: 0.3px; text-transform: uppercase;
+        }
+        .nav-contact {
+            font-size: 12px; color: #6b7280;
+            display: flex; align-items: center; gap: 6px;
+            padding: 0 16px; border-right: 1px solid #e5e7eb;
+            margin-right: 4px; letter-spacing: -0.01em;
+        }
+        .nav-contact i { font-size: 11px; color: var(--red); }
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+        .nav-badge {
+            background: rgba(204,18,0,0.08); color: var(--red);
+            padding: 4px 11px; border-radius: 20px; font-size: 11px;
+            font-weight: 700; border: 1px solid rgba(204,18,0,0.2);
+            letter-spacing: 0.2px; display: flex; align-items: center; gap: 5px;
+        }
+        .nav-badge.green { background: rgba(16,185,129,0.1); color: #10b981; border-color: rgba(16,185,129,0.2); }
+        .nav-badge .live-dot {
+            width: 6px; height: 6px; border-radius: 50%; background: var(--red);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .btn-nav {
+            background: var(--navy); color: white; border: none;
+            padding: 7px 16px; border-radius: 7px; font-size: 12px;
+            font-weight: 700; cursor: pointer; display: inline-flex; align-items: center;
+            gap: 6px; font-family: inherit; transition: all 0.2s; letter-spacing: -0.01em;
+        }
+        .btn-nav:hover { background: var(--red); transform: translateY(-1px); }
+
+        /* ── BUTTONS ── */
+        .btn {
+            padding: 9px 20px; border-radius: 8px; border: none;
+            cursor: pointer; font-size: 13.5px; font-weight: 700;
+            transition: all 0.2s; display: inline-flex; align-items: center;
+            gap: 6px; text-decoration: none; font-family: inherit;
+            letter-spacing: -0.01em;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,86,219,0.4); }
+        .btn-gold { background: linear-gradient(135deg, var(--red-dark), var(--red)); color: white; }
+        .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(204,18,0,0.35); }
+        .btn-outline { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.28); }
+        .btn-outline:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.4); }
+        .btn-ghost { background: #f1f5f9; color: var(--text-mid); }
+        .btn-ghost:hover { background: #e2e8f0; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
+
+        /* ── LOT ACTIVE TOGGLE ── */
+        .lot-toggle-wrap { display: flex; align-items: center; gap: 7px; }
+        .lot-toggle { position: relative; width: 40px; height: 22px; cursor: pointer; flex-shrink: 0; }
+        .lot-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .toggle-slider {
+            position: absolute; inset: 0;
+            background: #d1d5db; border-radius: 22px;
+            transition: background 0.22s;
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: white; top: 3px; left: 3px;
+            transition: transform 0.22s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.22);
+        }
+        .lot-toggle input:checked + .toggle-slider { background: var(--success); }
+        .lot-toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+        .toggle-label { font-size: 11.5px; font-weight: 700; color: #9ca3af; }
+        .toggle-label.on { color: var(--success); }
+
+        /* ── HERO ── */
+        .hero {
+            background: linear-gradient(135deg, #060e1c 0%, #0A1628 45%, #112244 100%);
+            padding: 72px 2rem 80px;
+            position: relative; overflow: hidden;
+        }
+        /* 격자 패턴 레이어 */
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+        /* 컨테이너 블록 패턴 */
+        .hero-pattern {
+            position: absolute; inset: 0; pointer-events: none;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 47px, rgba(26,86,219,0.06) 48px),
+                repeating-linear-gradient(90deg, transparent, transparent 95px, rgba(26,86,219,0.06) 96px);
+        }
+        /* 우하단 그라디언트 글로우 */
+        .hero-glow {
+            position: absolute; right: -100px; bottom: -100px;
+            width: 500px; height: 500px; pointer-events: none;
+            background: radial-gradient(ellipse at center, rgba(26,86,219,0.18) 0%, transparent 70%);
+        }
+        /* 하단 커팅 라인 */
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; right: 0; height: 52px;
+            background: linear-gradient(to bottom right, transparent 49.5%, var(--bg) 50%);
+        }
+        .hero-inner {
+            max-width: 1260px;
+            margin: 0 auto;
+            position: relative; z-index: 1;
+            display: grid; grid-template-columns: 1fr 300px;
+            gap: 48px; align-items: start;
+        }
+        .hero-tag {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(204,18,0,0.15); color: #ff8070;
+            padding: 5px 14px; border-radius: 20px; font-size: 11px;
+            font-weight: 700; border: 1px solid rgba(204,18,0,0.3);
+            margin-bottom: 20px; letter-spacing: 0.4px;
+        }
+        .hero h1 {
+            color: white; font-size: 52px; font-weight: 900;
+            line-height: 1.15; margin-bottom: 18px;
+            letter-spacing: -0.03em;
+        }
+        .hero h1 span { color: var(--gold); }
+        .hero p {
+            color: #7a90b0; font-size: 15px; line-height: 1.75;
+            max-width: 540px; margin-bottom: 32px; letter-spacing: -0.01em;
+        }
+        .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+        .hero-ctas .btn { padding: 12px 24px; font-size: 14px; }
+        .hero-stats {
+            display: flex; gap: 0; margin-top: 52px; padding-top: 28px;
+            border-top: 1px solid rgba(255,255,255,0.09);
+        }
+        .hero-stat { padding: 0 36px 0 0; }
+        .hero-stat:first-child { padding-left: 0; }
+        .hero-stat .val { font-size: 32px; font-weight: 900; color: white; line-height: 1; letter-spacing: -0.03em; }
+        .hero-stat .lbl { font-size: 11px; color: #4e6080; margin-top: 4px; letter-spacing: 0.1px; }
+
+        /* Hero right dashboard card */
+        .hero-card {
+            background: rgba(255,255,255,0.055);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 18px;
+            padding: 0;
+            width: 100%;
+            backdrop-filter: blur(12px);
+            overflow: hidden;
+        }
+        .hero-card-header {
+            background: rgba(255,255,255,0.07);
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .hero-card-header span {
+            font-size: 11px; font-weight: 700; color: rgba(148,163,184,0.9);
+            letter-spacing: 0.6px; text-transform: uppercase;
+        }
+        .hero-card-header .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+        .hero-dash-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+        }
+        .hero-dash-item {
+            padding: 20px 18px;
+            border-right: 1px solid rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .hero-dash-item:nth-child(2n) { border-right: none; }
+        .hero-dash-item:nth-last-child(-n+2) { border-bottom: none; }
+        .hero-dash-item .dash-val {
+            font-size: 28px; font-weight: 900; color: white;
+            line-height: 1; letter-spacing: -0.03em;
+        }
+        .hero-dash-item .dash-val.accent { color: var(--gold); }
+        .hero-dash-item .dash-lbl {
+            font-size: 10.5px; color: #4e6080; margin-top: 5px;
+            letter-spacing: 0.2px;
+        }
+        .hero-dash-item .dash-icon {
+            font-size: 13px; color: var(--gold); margin-bottom: 10px;
+        }
+
+        /* 컨테이너 타입 범례 바 */
+        .hero-legend {
+            max-width: 1260px; margin: 0 auto;
+            position: relative; z-index: 1;
+            display: flex; align-items: center; gap: 0;
+            margin-top: 32px; padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            flex-wrap: wrap; gap: 4px;
+        }
+        .hero-legend-label {
+            font-size: 10px; font-weight: 700; color: #4e6080;
+            letter-spacing: 0.5px; text-transform: uppercase;
+            margin-right: 12px;
+        }
+        .legend-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: 700; border: 1px solid;
+        }
+        .legend-chip .chip-dot { width: 8px; height: 8px; border-radius: 2px; }
+        .legend-gp { color: #93b4f0; border-color: rgba(147,180,240,0.3); background: rgba(26,86,219,0.12); }
+        .legend-gp .chip-dot { background: #3b82f6; }
+        .legend-rf { color: #67d3ec; border-color: rgba(103,211,236,0.3); background: rgba(8,145,178,0.12); }
+        .legend-rf .chip-dot { background: #06b6d4; }
+        .legend-ot { color: #c4b5fd; border-color: rgba(196,181,253,0.3); background: rgba(124,58,237,0.12); }
+        .legend-ot .chip-dot { background: #8b5cf6; }
+        .legend-fr { color: #9ca3af; border-color: rgba(156,163,175,0.3); background: rgba(55,65,81,0.2); }
+        .legend-fr .chip-dot { background: #6b7280; }
+
+        /* ── TRUST BAR ── */
+        .trust-bar {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+        }
+        .trust-bar-inner {
+            max-width: 1260px; margin: 0 auto;
+            display: flex; align-items: stretch;
+            gap: 0;
+        }
+        .trust-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 20px 28px; flex: 1;
+            border-right: 1px solid var(--border);
+        }
+        .trust-item:last-child { border-right: none; }
+        .trust-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; color: var(--blue); flex-shrink: 0;
+        }
+        .trust-text .trust-title {
+            font-size: 12px; font-weight: 800; color: var(--text-dark);
+            margin-bottom: 2px; letter-spacing: -0.01em;
+        }
+        .trust-text .trust-desc {
+            font-size: 10.5px; color: var(--text-light); letter-spacing: -0.01em;
+        }
+
+        /* ── HOW IT WORKS ── */
+        .how-section {
+            background: #F1F5F9;
+            padding: 4rem 2rem;
+        }
+        .section-title {
+            text-align: center;
+            font-size: 24px; font-weight: 900; color: var(--navy);
+            margin-bottom: 2.5rem; letter-spacing: -0.03em;
+        }
+        .section-title span { color: var(--red); }
+        .steps-outer {
+            max-width: 1060px; margin: 0 auto;
+            position: relative;
+        }
+        .steps-connector {
+            position: absolute; top: 44px; left: calc(12.5% + 30px);
+            right: calc(12.5% + 30px); height: 2px;
+            background: linear-gradient(90deg, var(--blue), var(--red));
+            z-index: 0;
+        }
+        .steps-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;
+            position: relative; z-index: 1;
+        }
+        .step {
+            text-align: center; padding: 1.75rem 1rem 1.5rem;
+            border-radius: 16px; background: white;
+            transition: all 0.25s; border: 1px solid var(--border);
+            box-shadow: var(--shadow-card);
+        }
+        .step:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: rgba(26,86,219,0.2); }
+        .step-num-badge {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+            color: white; font-size: 13px; font-weight: 900;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 14px; position: relative; z-index: 2;
+            box-shadow: 0 0 0 4px white, 0 0 0 5px rgba(26,86,219,0.2);
+        }
+        .step-icon {
+            width: 56px; height: 56px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; margin: 0 auto 14px;
+        }
+        .step h4 { font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 7px; letter-spacing: -0.02em; }
+        .step p { font-size: 12px; color: var(--text-mid); line-height: 1.65; }
+
+        /* ── MAIN LAYOUT ── */
+        .main-layout {
+            max-width: 1320px; margin: 0 auto;
+            padding: 2rem; display: grid;
+            grid-template-columns: 272px 1fr; gap: 1.5rem;
+        }
+
+        /* ── FILTER PANEL ── */
+        .filter-panel {
+            background: white; border-radius: 16px;
+            padding: 1.5rem; box-shadow: var(--shadow-card);
+            height: fit-content; position: sticky; top: 82px;
+            border: 1px solid var(--border);
+        }
+        .filter-head {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1.25rem; padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .filter-head h3 { font-size: 13px; font-weight: 800; color: var(--text-dark); letter-spacing: -0.01em; }
+        .filter-reset { font-size: 12px; color: var(--blue); cursor: pointer; font-weight: 700; }
+        .filter-section { margin-bottom: 1.25rem; }
+        .filter-section h4 {
+            font-size: 9.5px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.9px; color: var(--text-mid); margin-bottom: 10px;
+        }
+        .filter-options { display: flex; flex-direction: column; gap: 7px; }
+        .filter-option { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .filter-option input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--blue); cursor: pointer; }
+        .filter-option label { font-size: 13px; color: var(--text-dark); cursor: pointer; flex: 1; }
+        .filter-count {
+            font-size: 11px; background: var(--bg); color: var(--text-mid);
+            padding: 1px 7px; border-radius: 10px; font-weight: 700;
+        }
+        .price-inputs { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+
+        /* ── LISTINGS ── */
+        .listings-area { min-width: 0; }
+        .listings-head {
+            display: flex; align-items: center; justify-content: space-between;
+            background: white; padding: 1rem 1.25rem;
+            border-radius: 12px; box-shadow: var(--shadow-card);
+            margin-bottom: 1.25rem; border: 1px solid var(--border);
+        }
+        .listings-count { font-size: 13.5px; color: var(--text-mid); }
+        .listings-count strong { color: var(--text-dark); font-weight: 800; font-size: 16px; }
+        .sort-select {
+            border: 1.5px solid var(--border); border-radius: 8px;
+            padding: 7px 12px; font-size: 13px; color: var(--text-dark);
+            cursor: pointer; background: white; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .sort-select:focus { outline: none; border-color: var(--blue); }
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+        }
+
+        /* ── CONTAINER CARD ── */
+        .container-card {
+            background: white; border-radius: 16px;
+            padding: 1.4rem; box-shadow: var(--shadow-card);
+            transition: all 0.28s; border: 1.5px solid transparent;
+            position: relative; overflow: hidden;
+            animation: fadeUp 0.3s ease forwards;
+        }
+        .container-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-5px); border-color: rgba(26,86,219,0.3);
+        }
+        /* 기본: GP/HC/TK — 블루 */
+        .container-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+            background: linear-gradient(90deg, var(--blue) 0%, var(--blue-light) 100%);
+        }
+        /* RF — 틸 */
+        .container-card.card-rf::before {
+            background: linear-gradient(90deg, var(--teal) 0%, var(--teal-light) 100%);
+        }
+        .container-card.card-rf:hover { border-color: rgba(8,145,178,0.3); }
+        /* OT — 퍼플 */
+        .container-card.card-ot::before {
+            background: linear-gradient(90deg, var(--purple) 0%, var(--purple-light) 100%);
+        }
+        .container-card.card-ot:hover { border-color: rgba(124,58,237,0.3); }
+        /* FR — 슬레이트 */
+        .container-card.card-fr::before {
+            background: linear-gradient(90deg, var(--slate) 0%, var(--slate-light) 100%);
+        }
+        .container-card.card-fr:hover { border-color: rgba(55,65,81,0.3); }
+
+        /* 입찰 경쟁 카운터 배지 */
+        .bid-count-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 10.5px; font-weight: 700;
+            background: #fff0ee; color: var(--red);
+            padding: 3px 9px; border-radius: 12px;
+            border: 1px solid rgba(204,18,0,0.2);
+        }
+        .bid-count-badge.none { background: var(--bg); color: var(--text-light); border-color: var(--border); }
+
+        .card-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+        .card-type {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+            color: white; padding: 6px 14px; border-radius: 8px;
+            font-size: 15px; font-weight: 900; letter-spacing: 0.2px;
+        }
+        /* 타입별 뱃지 색상 */
+        .card-type.type-rf { background: linear-gradient(135deg, #0c4a6e, #0369a1); }
+        .card-type.type-ot { background: linear-gradient(135deg, #3b0764, #6d28d9); }
+        .card-type.type-fr { background: linear-gradient(135deg, #1c2333, #374151); }
+
+        .cond-badge { font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+        .cond-iicl { background: #d1fae5; color: #065f46; }
+        .cond-cwo  { background: #dbeafe; color: #1e40af; }
+        .cond-asis { background: #fef3c7; color: #92400e; }
+        .card-location {
+            display: flex; align-items: center; gap: 6px;
+            color: var(--text-mid); font-size: 12.5px; margin-bottom: 10px;
+        }
+        .card-location i { color: var(--blue); }
+        .lot-id {
+            margin-left: auto; font-size: 10px;
+            background: var(--bg); color: var(--text-light);
+            padding: 2px 8px; border-radius: 8px; font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .card-specs {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; padding: 12px; background: #f8fafc;
+            border-radius: 10px; margin-bottom: 10px;
+            border: 1px solid #f1f5f9;
+        }
+        .spec-lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-light); font-weight: 800; margin-bottom: 2px; }
+        .spec-val { font-size: 13.5px; font-weight: 800; color: var(--text-dark); }
+        .spec-val.small { font-size: 11px; font-weight: 600; }
+        .card-price {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-top: 10px; border-top: 1px solid var(--border); margin-bottom: 10px;
+        }
+        .price-amount { font-size: 22px; font-weight: 900; color: var(--navy); letter-spacing: -0.03em; }
+        .price-amount .unit { font-size: 12px; font-weight: 500; color: var(--text-mid); letter-spacing: 0; }
+        .price-total { font-size: 11px; color: var(--text-light); text-align: right; }
+        .price-open { font-size: 15px; font-weight: 700; color: var(--gold-dark); }
+        .card-note {
+            font-size: 11.5px; color: var(--text-mid); background: #fffbf0;
+            padding: 8px 10px; border-radius: 8px; line-height: 1.55;
+            margin-bottom: 10px; border-left: 3px solid var(--gold);
+        }
+        .card-deadline {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11.5px; color: var(--text-mid); margin-bottom: 12px;
+        }
+        .deadline-soon { color: var(--danger); font-weight: 700; }
+        .deadline-tag {
+            background: #fee2e2; color: var(--danger);
+            padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700;
+        }
+        .deadline-tag-normal {
+            background: #f1f5f9; color: var(--text-mid);
+            padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600;
+        }
+
+        /* ── FILTER SEARCH ── */
+        .filter-search {
+            position: relative; margin-bottom: 1rem;
+        }
+        .filter-search input {
+            width: 100%; padding: 8px 10px 8px 32px;
+            border: 1.5px solid var(--border); border-radius: 8px;
+            font-size: 12.5px; color: var(--text-dark);
+            background: var(--bg); transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .filter-search input:focus {
+            outline: none; border-color: var(--blue); background: white;
+        }
+        .filter-search i {
+            position: absolute; left: 10px; top: 50%;
+            transform: translateY(-50%); color: var(--text-light); font-size: 12px;
+        }
+        .btn-bid {
+            width: 100%; background: linear-gradient(135deg, var(--blue), var(--blue-light));
+            color: white; padding: 12px; border-radius: 10px; border: none;
+            font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            font-family: inherit; letter-spacing: -0.01em;
+        }
+        .btn-bid:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(26,86,219,0.38); }
+        .card-rf .btn-bid { background: linear-gradient(135deg, var(--teal), var(--teal-light)); }
+        .card-rf .btn-bid:hover { box-shadow: 0 5px 16px rgba(8,145,178,0.38); }
+        .card-ot .btn-bid { background: linear-gradient(135deg, var(--purple), var(--purple-light)); }
+        .card-ot .btn-bid:hover { box-shadow: 0 5px 16px rgba(124,58,237,0.38); }
+        .card-fr .btn-bid { background: linear-gradient(135deg, var(--slate), var(--slate-light)); }
+        .card-fr .btn-bid:hover { box-shadow: 0 5px 16px rgba(55,65,81,0.38); }
+
+        /* ── MODAL ── */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.68);
+            backdrop-filter: blur(5px); z-index: 2000;
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .overlay.on { display: flex; }
+        .modal {
+            background: white; border-radius: 20px; width: 100%;
+            max-width: 700px; max-height: 92vh; overflow-y: auto;
+            box-shadow: 0 32px 64px rgba(0,0,0,0.38);
+        }
+        .modal-head {
+            background: linear-gradient(135deg, var(--navy), #122040);
+            padding: 1.5rem 2rem; border-radius: 20px 20px 0 0;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 1;
+        }
+        .modal-head h2 { color: white; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+        .modal-close {
+            color: rgba(255,255,255,0.55); cursor: pointer; font-size: 20px;
+            background: none; border: none; transition: color 0.2s;
+        }
+        .modal-close:hover { color: white; }
+        .modal-body { padding: 2rem; }
+
+        /* Lot summary bar */
+        .lot-summary {
+            background: #f8fafc; border-radius: 12px;
+            padding: 1.25rem; margin-bottom: 1.5rem;
+            border-left: 4px solid var(--blue);
+            border: 1px solid var(--border);
+            border-left-width: 4px;
+        }
+        .lot-summary h3 { font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 6px; letter-spacing: -0.02em; }
+        .lot-meta { font-size: 12px; color: var(--text-mid); margin-bottom: 12px; }
+        .lot-specs { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+        .lot-spec { text-align: center; }
+        .lot-spec .v { font-size: 15px; font-weight: 800; color: var(--navy); }
+        .lot-spec .l { font-size: 10px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+        /* Form */
+        .form-group { margin-bottom: 1.1rem; }
+        .form-label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text-dark); margin-bottom: 5px; }
+        .form-label .req { color: var(--danger); margin-left: 2px; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 10px 14px;
+            border: 1.5px solid var(--border); border-radius: 8px;
+            font-size: 14px; color: var(--text-dark);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: white; font-family: inherit;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none; border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+        }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-divider { margin: 1.25rem 0; border: none; border-top: 1px solid var(--border); }
+        .form-section-title {
+            font-size: 10.5px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.9px; color: var(--text-mid); margin-bottom: 1rem;
+        }
+        .mail-notice {
+            background: #eff6ff; border: 1px solid #bfdbfe;
+            border-radius: 10px; padding: 12px 14px;
+            font-size: 12px; color: #1e40af;
+            display: flex; align-items: flex-start; gap: 8px; margin-top: 1rem;
+            line-height: 1.6;
+        }
+        .mail-notice i { flex-shrink: 0; margin-top: 2px; }
+
+        /* ── ADMIN ── */
+        #admin-panel { display: none; }
+        .admin-nav {
+            background: var(--navy); padding: 1rem 2rem;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .admin-nav h2 { color: white; font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+        .admin-body { max-width: 1320px; margin: 0 auto; padding: 2rem; }
+        .admin-kpi {
+            display: grid; grid-template-columns: repeat(4,1fr);
+            gap: 1rem; margin-bottom: 2rem;
+        }
+        .kpi-card {
+            background: white; border-radius: 14px; padding: 1.25rem;
+            box-shadow: var(--shadow-card); display: flex; align-items: center; gap: 14px;
+            border: 1px solid var(--border);
+        }
+        .kpi-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+        }
+        .kpi-icon.blue  { background: #eff6ff; color: var(--blue); }
+        .kpi-icon.gold  { background: #fffbeb; color: var(--gold-dark); }
+        .kpi-icon.green { background: #ecfdf5; color: var(--success); }
+        .kpi-icon.red   { background: #fef2f2; color: var(--danger); }
+        .kpi-val { font-size: 26px; font-weight: 900; color: var(--text-dark); line-height: 1; letter-spacing: -0.03em; }
+        .kpi-lbl { font-size: 11.5px; color: var(--text-mid); margin-top: 3px; }
+        .admin-grid { display: grid; grid-template-columns: 390px 1fr; gap: 1.5rem; }
+        .a-card { background: white; border-radius: 16px; box-shadow: var(--shadow-card); overflow: hidden; border: 1px solid var(--border); }
+        .a-card-head {
+            padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            background: #fafbfc;
+        }
+        .a-card-head h3 { font-size: 13.5px; font-weight: 800; color: var(--text-dark); letter-spacing: -0.01em; }
+        .a-card-body { padding: 1.5rem; }
+
+        /* Table */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th {
+            text-align: left; padding: 9px 12px;
+            font-size: 9.5px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.7px; color: var(--text-mid);
+            background: #f8fafc; border-bottom: 1px solid var(--border);
+        }
+        .data-table td {
+            padding: 10px 12px; border-bottom: 1px solid var(--border);
+            color: var(--text-dark); vertical-align: middle;
+        }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tbody tr:hover td { background: #f8fafc; }
+        .tbl-wrap { overflow-x: auto; }
+
+        /* ── BID SUMMARY ── */
+        .summary-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+        .summary-table th {
+            text-align:left; padding:9px 14px; background:#f8fafc;
+            font-size:11.5px; font-weight:700; color:var(--text-mid);
+            border-bottom:2px solid var(--border); white-space:nowrap;
+        }
+        .summary-table td { padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+        .summary-table tbody tr:hover td { background:#f8fafc; }
+        .summary-table tr:last-child td { border-bottom:none; }
+        .bid-bar-wrap { display:flex; gap:3px; align-items:center; }
+        .bid-bar {
+            width:10px; height:18px; border-radius:3px;
+            background:#e2e8f0; transition:background 0.2s;
+        }
+        .bid-bar.filled { background:var(--red); }
+        .company-tag {
+            display:inline-block; background:#eff6ff; color:var(--blue);
+            border:1px solid #bfdbfe; padding:2px 8px; border-radius:10px;
+            font-size:11px; font-weight:600; margin:2px 2px 2px 0;
+        }
+        .ratio-badge {
+            display:inline-block; padding:2px 8px; border-radius:8px;
+            font-size:11.5px; font-weight:700;
+        }
+        .ratio-over { background:#dcfce7; color:#16a34a; }
+        .ratio-under { background:#fff7ed; color:#ea580c; }
+
+        /* Tabs */
+        .tab-bar {
+            display: flex; gap: 2px; background: var(--bg);
+            border-radius: 8px; padding: 3px;
+        }
+        .tab {
+            padding: 5px 14px; border-radius: 6px; border: none;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            background: transparent; color: var(--text-mid); font-family: inherit; transition: all 0.2s;
+        }
+        .tab.on { background: white; color: var(--navy); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+        /* Login modal */
+        .login-box {
+            background: white; border-radius: 20px; padding: 2.5rem;
+            width: 100%; max-width: 400px; text-align: center;
+            box-shadow: 0 32px 64px rgba(0,0,0,0.38);
+        }
+        .login-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--navy), var(--blue));
+            border-radius: 18px; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem; font-size: 26px; color: white;
+        }
+        .login-box h3 { font-size: 20px; font-weight: 900; color: var(--text-dark); margin-bottom: 8px; letter-spacing: -0.03em; }
+        .login-box p { font-size: 13px; color: var(--text-mid); margin-bottom: 1.5rem; }
+        .login-err { background: #fef2f2; color: var(--danger); padding: 10px; border-radius: 8px; font-size: 13px; margin-top: 10px; display: none; font-weight: 600; }
+
+        /* Status */
+        .sbadge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .sbadge-on  { background: #d1fae5; color: #065f46; }
+        .sbadge-off { background: #fee2e2; color: #991b1b; }
+
+        /* Empty */
+        .empty {
+            text-align: center; padding: 4rem 2rem; color: var(--text-mid);
+            grid-column: 1 / -1;
+        }
+        .empty i { font-size: 52px; color: var(--border); display: block; margin-bottom: 1rem; }
+        .empty h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+        .empty p { font-size: 13px; }
+
+        /* Footer */
+        footer {
+            background: var(--navy);
+            border-top: 1px solid rgba(255,255,255,0.07);
+            margin-top: 4rem;
+        }
+        .footer-inner {
+            max-width: 1260px; margin: 0 auto;
+            padding: 2.5rem 2rem;
+            display: grid; grid-template-columns: 1fr 1.1fr 1fr;
+            gap: 2rem;
+        }
+        .footer-left {}
+        .footer-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .footer-logo-icon {
+            width: 34px; height: 34px; background: linear-gradient(135deg, var(--blue), var(--gold));
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 15px; color: white;
+        }
+        .footer-logo-name { font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.9); }
+        .footer-desc { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.75; margin-bottom: 16px; }
+        .footer-contacts { display: flex; flex-direction: column; gap: 6px; }
+        .footer-contact-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,0.55); }
+        .footer-contact-item i { color: var(--gold); width: 14px; font-size: 11px; }
+        .footer-contact-item strong { color: rgba(255,255,255,0.8); }
+
+        /* 담당자 카드 */
+        .footer-person-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 14px; padding: 1.4rem 1.5rem;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .footer-person-label {
+            font-size: 10px; font-weight: 800; letter-spacing: 0.8px;
+            text-transform: uppercase; color: var(--gold);
+            display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+        }
+        .footer-person-name {
+            font-size: 16px; font-weight: 900; color: white; margin-bottom: 2px;
+        }
+        .footer-person-pos {
+            font-size: 11px; color: rgba(255,255,255,0.4);
+            margin-bottom: 14px; letter-spacing: 0.2px;
+        }
+        .footer-person-rows { display: flex; flex-direction: column; gap: 9px; }
+        .footer-person-row {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 12px; color: rgba(255,255,255,0.6);
+        }
+        .footer-person-row i { color: var(--gold); width: 14px; text-align: center; flex-shrink: 0; }
+        .footer-person-row a {
+            color: rgba(255,255,255,0.75); text-decoration: none; transition: color 0.2s;
+        }
+        .footer-person-row a:hover { color: var(--gold); }
+
+        .footer-right { display: flex; flex-direction: column; justify-content: center; }
+        .footer-notice {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 1.25rem;
+            font-size: 11.5px; color: rgba(255,255,255,0.38); line-height: 1.75;
+        }
+        .footer-notice p + p { margin-top: 6px; }
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.06);
+            text-align: center; padding: 1rem 2rem;
+            font-size: 11px; color: rgba(255,255,255,0.3);
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .overlay.on .modal, .overlay.on .login-box { animation: slideIn 0.25s ease; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* ── SPEC SECTION ── */
+        .spec-tab {
+            padding: 9px 22px; border-radius: 24px;
+            border: 1.5px solid var(--border); font-size: 13px; font-weight: 700;
+            cursor: pointer; background: white; color: var(--text-mid);
+            font-family: inherit; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 7px;
+            box-shadow: var(--shadow-card);
+        }
+        .spec-tab.on { background: var(--navy); color: white; border-color: var(--navy); box-shadow: 0 4px 12px rgba(10,22,40,0.3); }
+        .spec-tab:hover:not(.on) { border-color: var(--blue); color: var(--blue); }
+
+        .spec-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            justify-content: center;
+        }
+        .spec-grid .spec-card {
+            flex: 0 0 300px;
+            max-width: 360px;
+        }
+        .spec-card {
+            background: white; border-radius: 16px; overflow: hidden;
+            box-shadow: var(--shadow-card); transition: all 0.3s; border: 1.5px solid var(--border);
+        }
+        .spec-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(26,86,219,0.2); }
+
+        .spec-card-head { padding: 1.1rem 1.25rem; display: flex; align-items: center; gap: 12px; }
+        .spec-type-icon {
+            width: 42px; height: 42px; background: rgba(255,255,255,0.15);
+            border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; font-size: 18px; color: white; flex-shrink: 0;
+        }
+        .spec-type-name { font-size: 15px; font-weight: 900; color: white; letter-spacing: -0.02em; }
+        .spec-type-code { font-size: 11px; color: rgba(255,255,255,0.65); font-weight: 600; letter-spacing: 0.5px; }
+
+        .spec-key-stats {
+            display: grid; grid-template-columns: repeat(3,1fr);
+            background: #f8fafc; border-bottom: 1px solid var(--border);
+        }
+        .spec-key-stat { padding: 12px 8px; text-align: center; border-right: 1px solid var(--border); }
+        .spec-key-stat:last-child { border-right: none; }
+        .spec-key-stat .kv { font-size: 14px; font-weight: 800; color: var(--navy); }
+        .spec-key-stat .kl { font-size: 9px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px; line-height: 1.4; }
+
+        .spec-table-wrap { padding: 1rem 1.25rem 1.25rem; }
+        .spec-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        .spec-table td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; color: var(--text-mid); vertical-align: middle; }
+        .spec-table td:first-child { color: var(--text-dark); }
+        .spec-num { text-align: right; font-weight: 700; color: var(--text-dark); }
+        .spec-num.hl { color: var(--blue) !important; font-size: 13px; }
+        .spec-sec-row td {
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.6px; color: var(--blue); background: #eff6ff;
+            padding: 8px 4px 4px; border-bottom: 1px solid #bfdbfe;
+        }
+
+        /* ── MULTI-SELECT ── */
+        .lot-cb { width:17px; height:17px; accent-color:var(--blue); cursor:pointer; flex-shrink:0; }
+        .container-card.selected {
+            border-color: var(--blue) !important;
+            background: #f0f7ff;
+            box-shadow: 0 0 0 3px rgba(26,86,219,0.12), var(--shadow-card) !important;
+        }
+        .container-card.selected::before { opacity: 1; }
+
+        .select-bar {
+            position: fixed; bottom: -100px; left: 50%;
+            transform: translateX(-50%); z-index: 1500;
+            transition: bottom 0.35s cubic-bezier(0.34,1.56,0.64,1);
+            width: calc(100% - 4rem); max-width: 800px;
+        }
+        .select-bar.show { bottom: 28px; }
+        .select-bar-inner {
+            background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+            border-radius: 16px;
+            padding: 15px 22px; display: flex;
+            align-items: center; justify-content: space-between;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.55);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .sel-info { color: white; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .sel-info i { color: var(--gold); font-size: 18px; }
+        .sel-cnt-badge {
+            background: var(--gold); color: white;
+            min-width: 28px; height: 28px; border-radius: 14px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 900; padding: 0 8px;
+        }
+        .sel-hint { color: rgba(255,255,255,0.4); font-size: 12px; font-weight: 400; }
+
+        .multi-lot-tbl { width:100%; border-collapse:collapse; font-size:12.5px; margin-top:12px; }
+        .multi-lot-tbl th {
+            background:var(--bg); padding:8px 10px;
+            font-size:9.5px; font-weight:800; text-transform:uppercase;
+            letter-spacing:0.6px; color:var(--text-mid);
+            text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;
+        }
+        .multi-lot-tbl td { padding:7px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }
+        .multi-lot-tbl tr:last-child td { border-bottom:none; }
+        .multi-lot-tbl input[type="number"] {
+            width:100%; min-width:80px; padding:5px 8px;
+            border:1.5px solid var(--border); border-radius:6px;
+            font-size:12px; font-family:inherit; color:var(--text-dark);
+        }
+        .multi-lot-tbl input[type="number"]:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 2px rgba(26,86,219,0.1); }
+
+        /* Responsive */
+        @media (max-width: 960px) {
+            .main-layout { grid-template-columns: 1fr; }
+            .filter-panel { position: static; }
+            .admin-grid { grid-template-columns: 1fr; }
+            .admin-kpi { grid-template-columns: repeat(2,1fr); }
+            .hero-inner { grid-template-columns: 1fr; }
+            .hero-card { display: none; }
+            .hero h1 { font-size: 34px; }
+            .steps-grid { grid-template-columns: repeat(2,1fr); }
+            .steps-connector { display: none; }
+            .form-row { grid-template-columns: 1fr; }
+            .trust-bar-inner { flex-wrap: wrap; }
+            .trust-item { flex: 0 0 50%; border-bottom: 1px solid var(--border); }
+            .footer-inner { grid-template-columns: 1fr; }
+            .footer-person-card { order: -1; }
+            .nav-contact { display: none; }
+            .nav-heung-a { display: none; }
+            .nav-logo-sprite { width: 120px; height: 40px; background-size: 270px; background-position: 0px -155px; }
+            .hero-legend { gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     NAV
+════════════════════════════════════════ -->
+<nav class="nav">
+    <div class="nav-logo" onclick="goBuyer()">
+        <div class="nav-logo-sprite"></div>
+        <div class="nav-divider"></div>
+        <div class="nav-heung-a">
+            흥아라인(주)
+            <small>Heung-A Line Co., Ltd.</small>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-platform-badge">Container DP Sales</div>
+    </div>
+    <div class="nav-right">
+        <div class="nav-contact">
+            <i class="fas fa-headset"></i>
+            장비팀 직통 &nbsp;|&nbsp; <strong style="color:rgba(255,255,255,0.7)">container@sinokor.co.kr</strong>
+        </div>
+        <span class="nav-badge"><span class="live-dot"></span>LIVE</span>
+        <span class="nav-badge green"><i class="fas fa-check-circle" style="font-size:10px"></i>&nbsp;입찰 진행중</span>
+        <button class="btn-nav" onclick="openLogin()">
+            <i class="fas fa-lock"></i> 판매자 관리
+        </button>
+    </div>
+</nav>
+
+<!-- ════════════════════════════════════════
+     BUYER PORTAL
+════════════════════════════════════════ -->
+<div id="buyer-portal">
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-pattern"></div>
+        <div class="hero-glow"></div>
+        <div class="hero-inner">
+            <div>
+                <div class="hero-tag">
+                    <i class="fas fa-anchor"></i>
+                    SINOKOR &nbsp;·&nbsp; HEUNG-A LINE &nbsp;|&nbsp; Own Van Direct Sale
+                </div>
+                <h1>중고 컨테이너<br><span>DP 매각</span></h1>
+                <p>장금상선·흥아라인 자사 보유 Own Van 컨테이너를 직접 매각합니다.<br>
+                   지역·타입별 재고를 확인하고 온라인으로 입찰 의뢰를 제출하세요.</p>
+                <div class="hero-ctas">
+                    <button class="btn btn-gold" onclick="goTo('listings-section')">
+                        <i class="fas fa-boxes"></i> 매각 재고 조회
+                    </button>
+                    <button class="btn btn-outline" onclick="goTo('spec-section')">
+                        <i class="fas fa-ruler-combined"></i> 컨테이너 스펙
+                    </button>
+                </div>
+                <div class="hero-stats" id="hero-stats"></div>
+            </div>
+            <div class="hero-card">
+                <div class="hero-card-header">
+                    <div class="dot"></div>
+                    <span>실시간 매각 현황</span>
+                </div>
+                <div class="hero-dash-grid" id="hero-dash">
+                    <div class="hero-dash-item">
+                        <div class="dash-icon"><i class="fas fa-layer-group"></i></div>
+                        <div class="dash-val accent" id="dash-lots">—</div>
+                        <div class="dash-lbl">활성 LOT 수</div>
+                    </div>
+                    <div class="hero-dash-item">
+                        <div class="dash-icon"><i class="fas fa-cubes"></i></div>
+                        <div class="dash-val" id="dash-units">—</div>
+                        <div class="dash-lbl">총 Units</div>
+                    </div>
+                    <div class="hero-dash-item">
+                        <div class="dash-icon"><i class="fas fa-globe-asia"></i></div>
+                        <div class="dash-val" id="dash-regions">—</div>
+                        <div class="dash-lbl">권역 수</div>
+                    </div>
+                    <div class="hero-dash-item">
+                        <div class="dash-icon"><i class="fas fa-map-marker-alt"></i></div>
+                        <div class="dash-val" id="dash-ports">—</div>
+                        <div class="dash-lbl">항구 / 도시</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-legend">
+            <span class="hero-legend-label">타입 색상 구분</span>
+            <span class="legend-chip legend-gp"><span class="chip-dot"></span>GP / HC / TK</span>
+            <span class="legend-chip legend-rf"><span class="chip-dot"></span>RF / RFHC</span>
+            <span class="legend-chip legend-ot"><span class="chip-dot"></span>OT (Open Top)</span>
+            <span class="legend-chip legend-fr"><span class="chip-dot"></span>FR / Rack</span>
+        </div>
+    </div>
+
+    <!-- TRUST BAR -->
+    <div class="trust-bar">
+        <div class="trust-bar-inner">
+            <div class="trust-item">
+                <div class="trust-icon" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);color:#16a34a"><i class="fas fa-globe-asia"></i></div>
+                <div class="trust-text">
+                    <div class="trust-title">4개 권역</div>
+                    <div class="trust-desc">한국 · 중국 · 일본 · 동남아</div>
+                </div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon" style="background:linear-gradient(135deg,#fdf4ff,#fae8ff);color:#9333ea"><i class="fas fa-boxes"></i></div>
+                <div class="trust-text">
+                    <div class="trust-title">12종 컨테이너 타입</div>
+                    <div class="trust-desc">GP · HC · RF · OT · FR · TK 등</div>
+                </div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon" style="background:linear-gradient(135deg,#fff0ee,#ffe4e0);color:#CC1200"><i class="fas fa-certificate"></i></div>
+                <div class="trust-text">
+                    <div class="trust-title">등급 명시</div>
+                    <div class="trust-desc">IICL / CWO / AS-IS 투명 공개</div>
+                </div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon" style="background:linear-gradient(135deg,#fff1f2,#ffe4e6);color:#e11d48"><i class="fas fa-clock"></i></div>
+                <div class="trust-text">
+                    <div class="trust-title">온라인 24시간 입찰</div>
+                    <div class="trust-desc">이메일 자동 발송 시스템</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="how-section" id="how-section">
+        <div class="section-title">입찰 <span>진행 절차</span></div>
+        <div class="steps-outer">
+            <div class="steps-connector"></div>
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-num-badge">01</div>
+                    <div class="step-icon" style="background:#eff6ff; color:var(--blue)"><i class="fas fa-search"></i></div>
+                    <h4>재고 확인</h4>
+                    <p>지역·타입별 매각 가능한<br>컨테이너 재고를 조회하세요</p>
+                </div>
+                <div class="step">
+                    <div class="step-num-badge">02</div>
+                    <div class="step-icon" style="background:#fffbeb; color:var(--gold-dark)"><i class="fas fa-file-alt"></i></div>
+                    <h4>입찰서 작성</h4>
+                    <p>희망 단가·수량·인도조건을<br>입력하고 제출하세요</p>
+                </div>
+                <div class="step">
+                    <div class="step-num-badge">03</div>
+                    <div class="step-icon" style="background:#ecfdf5; color:var(--success)"><i class="fas fa-paper-plane"></i></div>
+                    <h4>자동 발송</h4>
+                    <p>입찰 내용이 장비팀 담당자<br>메일로 자동 발송됩니다</p>
+                </div>
+                <div class="step">
+                    <div class="step-num-badge" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6)">04</div>
+                    <div class="step-icon" style="background:#fdf4ff; color:#9333ea"><i class="fas fa-handshake"></i></div>
+                    <h4>낙찰 통보</h4>
+                    <p>최고가 입찰자에게 담당자가<br>직접 연락드립니다</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SPEC SECTION -->
+    <div id="spec-section" style="background:white; padding:3.5rem 2rem; border-top:1px solid var(--border);">
+        <div style="max-width:1260px; margin:0 auto;">
+            <div class="section-title">컨테이너 <span>스펙 안내</span></div>
+            <p style="text-align:center; font-size:13px; color:var(--text-mid); margin:-1.5rem auto 2rem; max-width:640px; line-height:1.7;">
+                장금상선(주) 공식 기준 &nbsp;·&nbsp; 실제 제원은 제조사·연식에 따라 상이할 수 있습니다
+            </p>
+            <div id="spec-tabs" style="display:flex; justify-content:center; gap:8px; margin-bottom:2rem; flex-wrap:wrap;"></div>
+            <div id="spec-content"></div>
+        </div>
+    </div>
+
+    <!-- LISTINGS -->
+    <div class="main-layout" id="listings-section">
+
+        <!-- FILTER PANEL -->
+        <aside class="filter-panel">
+            <div class="filter-head">
+                <h3><i class="fas fa-sliders-h" style="color:var(--blue); margin-right:6px;"></i>필터</h3>
+                <span class="filter-reset" onclick="resetFilters()"><i class="fas fa-rotate-left"></i> 초기화</span>
+            </div>
+            <div class="filter-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="항구·LOT ID·타입 검색..."
+                       oninput="applyAll()" autocomplete="off">
+            </div>
+            <div class="filter-section">
+                <h4>지역</h4>
+                <div class="filter-options" id="fil-region"></div>
+            </div>
+            <div class="filter-section">
+                <h4>컨테이너 타입</h4>
+                <div class="filter-options" id="fil-type"></div>
+            </div>
+            <div class="filter-section">
+                <h4>상태 등급</h4>
+                <div class="filter-options" id="fil-cond"></div>
+            </div>
+            <div class="filter-section">
+                <h4>가격 (USD/Unit)</h4>
+                <div class="price-inputs">
+                    <input type="number" class="form-input" id="pmin" placeholder="최소" style="font-size:12px;padding:7px 10px;">
+                    <span style="color:var(--text-light)">~</span>
+                    <input type="number" class="form-input" id="pmax" placeholder="최대" style="font-size:12px;padding:7px 10px;">
+                </div>
+                <button class="btn btn-primary" style="width:100%; font-size:12px; padding:7px;" onclick="applyAll()">
+                    <i class="fas fa-filter"></i> 적용
+                </button>
+            </div>
+        </aside>
+
+        <!-- LISTINGS AREA -->
+        <div class="listings-area">
+            <div class="listings-head">
+                <div class="listings-count">
+                    총 <strong id="cnt">0</strong>개 매각 LOT
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="btn btn-sm" id="sel-all-btn"
+                            style="background:#f1f5f9; color:var(--text-mid); border:1.5px solid var(--border); font-size:12px;"
+                            onclick="selectAll()">
+                        <i class="fas fa-check-double"></i> 전체 선택
+                    </button>
+                    <button class="btn btn-sm" id="desel-all-btn"
+                            style="background:#f1f5f9; color:var(--text-mid); border:1.5px solid var(--border); font-size:12px; display:none;"
+                            onclick="clearSel()">
+                        <i class="fas fa-times"></i> 전체 해제
+                    </button>
+                    <select class="sort-select" id="sort-sel" onchange="applyAll()">
+                        <option value="deadline">마감 임박순</option>
+                        <option value="price-asc">단가 낮은순</option>
+                        <option value="price-desc">단가 높은순</option>
+                        <option value="qty">수량 많은순</option>
+                        <option value="region">지역순</option>
+                    </select>
+                </div>
+            </div>
+            <div class="listings-grid" id="grid"></div>
+        </div>
+    </div>
+
+    <!-- FLOATING SELECT BAR -->
+    <div class="select-bar" id="select-bar">
+        <div class="select-bar-inner">
+            <div class="sel-info">
+                <i class="fas fa-check-square"></i>
+                <span class="sel-cnt-badge" id="sel-cnt">0</span>
+                개 LOT 선택됨
+                <span class="sel-hint">| 체크박스로 원하는 LOT를 선택하세요</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-ghost btn-sm" onclick="clearSel()">
+                    <i class="fas fa-times"></i> 선택 해제
+                </button>
+                <button class="btn btn-gold" onclick="openMultiBid()">
+                    <i class="fas fa-paper-plane"></i> 일괄 입찰 의뢰
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-left">
+                <div class="footer-logo">
+                    <div class="footer-logo-icon"><i class="fas fa-ship"></i></div>
+                    <div class="footer-logo-name">장금상선(주) · 흥아라인(주)</div>
+                </div>
+                <div class="footer-desc">
+                    컨테이너 DP 매각 비딩 플랫폼<br>
+                    자사 보유 Own Van 컨테이너 직접 매각 전용 시스템
+                </div>
+                <div class="footer-contacts">
+                    <div class="footer-contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>장비팀 입찰 문의 &nbsp;<strong>container@sinokor.co.kr</strong></span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="fas fa-globe"></i>
+                        <span>한국 · 중국 · 일본 · 동남아 4개 권역</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="fas fa-clock"></i>
+                        <span>온라인 24시간 입찰 접수 가능</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 담당자 직통 연락처 -->
+            <div class="footer-person-card">
+                <div class="footer-person-label">
+                    <i class="fas fa-user-tie"></i> 담당자 직통 연락처
+                </div>
+                <div class="footer-person-name">김민수 과장</div>
+                <div class="footer-person-pos">장금상선(주) · 흥아라인(주) &nbsp;|&nbsp; 장비팀</div>
+                <div class="footer-person-rows">
+                    <div class="footer-person-row">
+                        <i class="fas fa-phone"></i>
+                        <a href="tel:0264967242">02-6496-7242</a>
+                        <span style="color:rgba(255,255,255,0.25);">|</span>
+                        <span style="font-size:10px;color:rgba(255,255,255,0.35);">직통</span>
+                    </div>
+                    <div class="footer-person-row">
+                        <i class="fas fa-mobile-alt"></i>
+                        <a href="tel:01075776153">010-7577-6153</a>
+                        <span style="color:rgba(255,255,255,0.25);">|</span>
+                        <span style="font-size:10px;color:rgba(255,255,255,0.35);">핸드폰</span>
+                    </div>
+                    <div class="footer-person-row">
+                        <i class="fas fa-envelope"></i>
+                        <a href="mailto:ss46103@sinokor.co.kr">ss46103@sinokor.co.kr</a>
+                    </div>
+                    <div class="footer-person-row">
+                        <i class="fas fa-envelope"></i>
+                        <a href="mailto:container@sinokor.co.kr">container@sinokor.co.kr</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-right">
+                <div class="footer-notice">
+                    <p>본 플랫폼의 재고 정보는 실제와 차이가 있을 수 있으며,<br>최종 수량 및 가격은 담당자와 협의 후 확정됩니다.</p>
+                    <p>입찰 제출 시 기본 메일 프로그램이 열리며, 내용 확인 후<br>직접 발송해 주시기 바랍니다.</p>
+                    <p style="margin-top:10px;color:rgba(255,255,255,0.25);">IICL / CWO / AS-IS 등급은 육안 검사 기준이며,<br>현장 확인은 별도 협의 후 진행됩니다.</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2026 Sinokor Merchant Marine Co., Ltd. · Heung-A Line Co., Ltd. All Rights Reserved.
+        </div>
+    </footer>
+</div>
+
+<!-- ════════════════════════════════════════
+     ADMIN PANEL
+════════════════════════════════════════ -->
+<div id="admin-panel">
+    <div class="admin-nav">
+        <h2><i class="fas fa-cogs" style="margin-right:8px; color:var(--gold);"></i>
+            장비팀 관리자 — DP 매각 재고 관리
+        </h2>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-outline btn-sm" onclick="goBuyer()">
+                <i class="fas fa-eye"></i> 구매자 화면
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="adminLogout()">
+                <i class="fas fa-sign-out-alt"></i> 로그아웃
+            </button>
+        </div>
+    </div>
+    <div class="admin-body">
+        <div class="admin-kpi" id="kpi"></div>
+        <div class="admin-grid">
+
+            <!-- ADD FORM -->
+            <div class="a-card">
+                <div class="a-card-head">
+                    <h3><i class="fas fa-plus-circle" style="color:var(--blue); margin-right:6px;"></i>매각 LOT 신규 등록</h3>
+                </div>
+                <div class="a-card-body">
+                    <form onsubmit="addLot(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">지역 <span class="req">*</span></label>
+                                <select class="form-select" id="n-region" required onchange="updatePorts()">
+                                    <option value="">선택</option>
+                                    <option value="한국">한국</option>
+                                    <option value="중국">중국</option>
+                                    <option value="일본">일본</option>
+                                    <option value="동남아">동남아</option>
+                                    <option value="기타">기타</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">항구 / 도시 <span class="req">*</span></label>
+                                <select class="form-select" id="n-port" required>
+                                    <option value="">지역 먼저 선택</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">컨테이너 타입 <span class="req">*</span></label>
+                                <select class="form-select" id="n-type" required>
+                                    <option value="">선택</option>
+                                    <option value="20GP">20GP — 20ft General Purpose</option>
+                                    <option value="40GP">40GP — 40ft General Purpose</option>
+                                    <option value="40HC">40HC — 40ft High Cube</option>
+                                    <option value="20RF">20RF — 20ft Reefer</option>
+                                    <option value="40RF">40RF — 40ft Reefer</option>
+                                    <option value="40RFHC">40RFHC — 40ft Reefer HC</option>
+                                    <option value="20OT">20OT — 20ft Open Top</option>
+                                    <option value="40OT">40OT — 40ft Open Top</option>
+                                    <option value="20FR">20FR — 20ft Flat Rack</option>
+                                    <option value="40FR">40FR — 40ft Flat Rack</option>
+                                    <option value="45HC">45HC — 45ft High Cube</option>
+                                    <option value="20TK">20TK — 20ft Tank</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">수량 (Units) <span class="req">*</span></label>
+                                <input type="number" class="form-input" id="n-qty" placeholder="예: 50" min="1" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">제조연도 범위</label>
+                                <input type="text" class="form-input" id="n-year" placeholder="예: 2005~2008">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">상태 등급 <span class="req">*</span></label>
+                                <select class="form-select" id="n-cond" required>
+                                    <option value="">선택</option>
+                                    <option value="IICL">IICL — 양호</option>
+                                    <option value="CWO">CWO — 보통</option>
+                                    <option value="AS-IS">AS-IS — 현상태</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">희망 단가 (USD/Unit)</label>
+                                <input type="number" class="form-input" id="n-price" placeholder="비워두면 입찰가 협의">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">입찰 마감일 <span class="req">*</span></label>
+                                <input type="date" class="form-input" id="n-deadline" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">비고 / 특이사항</label>
+                            <textarea class="form-textarea" id="n-note" placeholder="수리이력, 인도조건, 특이사항 등" style="min-height:68px;"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%;">
+                            <i class="fas fa-plus"></i> LOT 등록
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- RIGHT SIDE -->
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+
+                <!-- LOTS TABLE -->
+                <div class="a-card">
+                    <div class="a-card-head">
+                        <h3><i class="fas fa-list-alt" style="color:var(--blue); margin-right:6px;"></i>등록된 매각 LOT</h3>
+                        <div class="tab-bar">
+                            <button class="tab on" id="tab-active" onclick="switchTab('active')">활성만</button>
+                            <button class="tab" id="tab-all" onclick="switchTab('all')">전체</button>
+                        </div>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>LOT</th><th>항구</th><th>타입</th>
+                                    <th>수량</th><th>상태</th><th>단가(USD)</th>
+                                    <th>마감일</th><th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lots-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- BID SUMMARY -->
+                <div class="a-card" id="summary-card">
+                    <div class="a-card-head">
+                        <h3><i class="fas fa-chart-bar" style="color:var(--blue);margin-right:6px;"></i>LOT별 입찰 현황 요약</h3>
+                        <span style="font-size:11.5px;color:var(--text-light);">실시간 경쟁 현황</span>
+                    </div>
+                    <div style="padding:0;" id="bid-summary"></div>
+                </div>
+
+                <!-- BIDS TABLE -->
+                <div class="a-card">
+                    <div class="a-card-head">
+                        <h3><i class="fas fa-envelope-open-text" style="color:var(--gold-dark); margin-right:6px;"></i>접수된 입찰 내역</h3>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-sm btn-primary" onclick="printBids()">
+                                <i class="fas fa-print"></i> 인쇄 / PDF
+                            </button>
+                            <button class="btn btn-sm btn-ghost" onclick="clearBids()">
+                                <i class="fas fa-trash"></i> 전체삭제
+                            </button>
+                        </div>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>접수일</th><th>회사명</th><th>담당자</th>
+                                    <th>LOT</th><th>타입</th><th>수량</th>
+                                    <th>입찰단가</th><th>총액(USD)</th><th>연락처</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bids-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     BID MODAL
+════════════════════════════════════════ -->
+<div class="overlay" id="bid-ov">
+    <div class="modal">
+        <div class="modal-head">
+            <h2 id="modal-title"><i class="fas fa-gavel" style="margin-right:8px; color:var(--gold);"></i>입찰 의뢰서 작성</h2>
+            <button class="modal-close" onclick="closeBid()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="lot-summary" id="lot-sum"></div>
+
+            <div class="form-section-title"><i class="fas fa-building" style="margin-right:4px;"></i>구매자 정보</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">회사명 <span class="req">*</span></label>
+                    <input type="text" class="form-input" id="b-company" placeholder="극동MES, 신지글로벌 등">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">담당자 성명 <span class="req">*</span></label>
+                    <input type="text" class="form-input" id="b-name" placeholder="홍길동">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">이메일 <span class="req">*</span></label>
+                    <input type="email" class="form-input" id="b-email" placeholder="name@company.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">연락처</label>
+                    <input type="tel" class="form-input" id="b-phone" placeholder="02-1234-5678">
+                </div>
+            </div>
+
+            <hr class="form-divider">
+            <div class="form-section-title"><i class="fas fa-tag" style="margin-right:4px;"></i>입찰 내용</div>
+            <div id="single-fields">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">희망 수량 (Units) <span class="req">*</span></label>
+                    <input type="number" class="form-input" id="b-qty" placeholder="Units" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">입찰 단가 (USD/Unit) <span class="req">*</span></label>
+                    <input type="number" class="form-input" id="b-price" placeholder="예: 950">
+                </div>
+            </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">인도 조건 (Incoterms)</label>
+                    <select class="form-select" id="b-inco">
+                        <option value="EXW">EXW — 현장 인수</option>
+                        <option value="FOB">FOB</option>
+                        <option value="CIF">CIF</option>
+                        <option value="협의">협의</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">희망 인수 기한</label>
+                    <input type="date" class="form-input" id="b-take">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">추가 요청사항 / 비고</label>
+                <textarea class="form-textarea" id="b-note" placeholder="추가 협의 사항, 현장 확인 요청 등"></textarea>
+            </div>
+
+            <div class="mail-notice">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    제출 버튼 클릭 시 기본 메일 프로그램이 열립니다. 내용 확인 후 <strong>발송</strong>해주세요.<br>
+                    수신: <strong>container@sinokor.co.kr</strong> (장금상선·흥아라인 장비팀)
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:1.5rem;">
+                <button class="btn btn-ghost" style="flex:1;" onclick="closeBid()">취소</button>
+                <button class="btn btn-gold" style="flex:2;" onclick="submitBid()">
+                    <i class="fas fa-paper-plane"></i> 입찰 메일 발송
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     LOGIN MODAL
+════════════════════════════════════════ -->
+<div class="overlay" id="login-ov">
+    <div class="login-box">
+        <div class="login-icon"><i class="fas fa-shield-alt"></i></div>
+        <h3>판매자 관리자 로그인</h3>
+        <p>장비팀 담당자 전용 페이지입니다</p>
+        <div class="form-group">
+            <input type="password" class="form-input" id="pw-in"
+                   placeholder="비밀번호 입력"
+                   onkeypress="if(event.key==='Enter') doLogin()">
+        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="doLogin()">
+            <i class="fas fa-sign-in-alt"></i> 로그인
+        </button>
+        <div class="login-err" id="login-err"><i class="fas fa-exclamation-circle"></i> 비밀번호가 올바르지 않습니다</div>
+        <button class="btn btn-ghost" style="width:100%; margin-top:10px;" onclick="closeLogin()">취소</button>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════ -->
+<script>
+/* ── CONFIG ── */
+const ADMIN_PW    = '1234';            // 관리자 비밀번호 (변경 가능)
+const SALES_MAIL  = 'container@sinokor.co.kr';
+
+const PORTS = {
+    '한국': ['부산', '인천', '광양', '평택'],
+    '중국': ['상해', '청도', '천진', '광주', '닝보', '대련'],
+    '일본': ['도쿄', '오사카', '나고야', '요코하마', '고베'],
+    '동남아': ['싱가포르', '자카르타', '포트클랑', '방콕', '마닐라', '호치민'],
+    '기타': ['블라디보스토크', '시드니', '기타']
+};
+
+const TYPE_NAME = {
+    '20GP':'20ft General Purpose', '40GP':'40ft General Purpose',
+    '40HC':'40ft High Cube',       '20RF':'20ft Reefer',
+    '40RF':'40ft Reefer',          '40RFHC':'40ft Reefer HC',
+    '20OT':'20ft Open Top',        '40OT':'40ft Open Top',
+    '20FR':'20ft Flat Rack',       '40FR':'40ft Flat Rack',
+    '45HC':'45ft High Cube',       '20TK':'20ft Tank'
+};
+
+/* ── DEFAULT LISTINGS ── */
+const DEFAULTS = [
+    { id:'LOT001', region:'한국',  port:'부산',    type:'20GP',  qty:80,  year:'2005~2008', condition:'IICL',  price:900,  deadline:'2026-06-30', note:'외관 양호. 소량 수리 필요 품목 포함. EXW 부산신항 기준.', active:true, created:'2026-05-01' },
+    { id:'LOT002', region:'한국',  port:'부산',    type:'40HC',  qty:45,  year:'2006~2009', condition:'CWO',   price:1400, deadline:'2026-06-15', note:'일부 도어 수리 필요. 현장 확인 가능.', active:true, created:'2026-05-02' },
+    { id:'LOT003', region:'한국',  port:'인천',    type:'40OT',  qty:15,  year:'2005~2007', condition:'CWO',   price:null, deadline:'2026-07-31', note:'오픈탑 특수 컨테이너. 협의 매각.', active:true, created:'2026-05-03' },
+    { id:'LOT004', region:'중국',  port:'상해',    type:'20GP',  qty:120, year:'2004~2007', condition:'AS-IS', price:null, deadline:'2026-07-31', note:'현상태 인도. 일괄 매각 우선.', active:true, created:'2026-05-04' },
+    { id:'LOT005', region:'중국',  port:'청도',    type:'40GP',  qty:60,  year:'2007~2009', condition:'IICL',  price:1300, deadline:'2026-07-15', note:'장기 보관 재고. 상태 우수.', active:true, created:'2026-05-05' },
+    { id:'LOT006', region:'중국',  port:'천진',    type:'20GP',  qty:200, year:'2003~2006', condition:'AS-IS', price:600,  deadline:'2026-09-30', note:'대량 일괄 매각. 협의 가능.', active:true, created:'2026-05-06' },
+    { id:'LOT007', region:'일본',  port:'오사카',  type:'20RF',  qty:20,  year:'2007~2010', condition:'CWO',   price:3500, deadline:'2026-06-30', note:'Carrier 리퍼. 압축기 상태 현장확인 필요.', active:true, created:'2026-05-07' },
+    { id:'LOT008', region:'동남아',port:'싱가포르',type:'40HC',  qty:35,  year:'2006~2008', condition:'IICL',  price:1600, deadline:'2026-08-31', note:'싱가포르 현지 인도. 검사 후 매각.', active:true, created:'2026-05-08' },
+    { id:'LOT009', region:'동남아',port:'포트클랑',type:'20GP',  qty:50,  year:'2005~2008', condition:'CWO',   price:850,  deadline:'2026-07-31', note:'EXW 포트클랑. 소량 수리 필요.', active:true, created:'2026-05-09' },
+    { id:'LOT010', region:'한국',  port:'광양',    type:'40FR',  qty:10,  year:'2006~2008', condition:'IICL',  price:null, deadline:'2026-08-15', note:'플랫랙 특수 컨테이너. 협의 매각.', active:true, created:'2026-05-10' },
+];
+
+/* ── STATE ── */
+let lots  = [];
+let bids  = [];
+let tabState = 'active';  // admin tab
+let bidLot   = null;
+
+function init() {
+    const s = localStorage.getItem('dp_lots');
+    lots = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULTS));
+    const b = localStorage.getItem('dp_bids');
+    bids = b ? JSON.parse(b) : [];
+    if (!s) save();
+    renderBuyer();
+    renderSpecSection();
+}
+
+function save()    { localStorage.setItem('dp_lots', JSON.stringify(lots)); }
+function saveBids(){ localStorage.setItem('dp_bids', JSON.stringify(bids)); }
+
+/* ── BUYER ── */
+function renderBuyer() {
+    const active = lots.filter(l => l.active);
+    const units  = active.reduce((s,l) => s+l.qty, 0);
+    const regs   = new Set(active.map(l=>l.region)).size;
+    const types  = new Set(active.map(l=>l.type)).size;
+    const ports  = new Set(active.map(l=>l.port)).size;
+
+    document.getElementById('hero-stats').innerHTML = `
+        <div class="hero-stat"><div class="val">${units.toLocaleString()}</div><div class="lbl">총 매각 Units</div></div>
+        <div class="hero-stat" style="padding-left:36px; border-left:1px solid rgba(255,255,255,0.09);">
+            <div class="val">${active.length}</div><div class="lbl">활성 LOT</div></div>
+        <div class="hero-stat" style="padding-left:36px; border-left:1px solid rgba(255,255,255,0.09);">
+            <div class="val">${regs}</div><div class="lbl">권역 수</div></div>
+        <div class="hero-stat" style="padding-left:36px; border-left:1px solid rgba(255,255,255,0.09);">
+            <div class="val">${ports}</div><div class="lbl">항구 / 도시</div></div>
+        <div class="hero-stat" style="padding-left:36px; border-left:1px solid rgba(255,255,255,0.09);">
+            <div class="val">${types}</div><div class="lbl">컨테이너 타입</div></div>
+    `;
+    // 대시보드 카드 업데이트
+    const dashLots = document.getElementById('dash-lots');
+    const dashUnits = document.getElementById('dash-units');
+    const dashRegions = document.getElementById('dash-regions');
+    const dashPorts = document.getElementById('dash-ports');
+    if (dashLots) dashLots.textContent = active.length;
+    if (dashUnits) dashUnits.textContent = units.toLocaleString();
+    if (dashRegions) dashRegions.textContent = regs;
+    if (dashPorts) dashPorts.textContent = ports;
+    buildFilters();
+    applyAll();
+}
+
+function buildFilters() {
+    const active = lots.filter(l=>l.active);
+    const cnt = (arr, key) => arr.reduce((m,l)=>{ m[l[key]]=(m[l[key]]||0)+1; return m; }, {});
+
+    const rCnt = cnt(active,'region');
+    const tCnt = cnt(active,'type');
+    const cCnt = cnt(active,'condition');
+
+    const mkCBs = (containerId, cls, items, cnts) =>
+        document.getElementById(containerId).innerHTML = [...new Set(items)].map(v => `
+            <label class="filter-option">
+                <input type="checkbox" class="${cls}" value="${v}" onchange="onFil()">
+                <label>${v}</label>
+                <span class="filter-count">${cnts[v]||0}</span>
+            </label>`).join('');
+
+    mkCBs('fil-region', 'f-reg', active.map(l=>l.region), rCnt);
+    mkCBs('fil-type',   'f-typ', active.map(l=>l.type),   tCnt);
+    mkCBs('fil-cond',   'f-cnd', active.map(l=>l.condition), cCnt);
+}
+
+function onFil() { applyAll(); }
+
+function applyAll() {
+    const regs  = checked('f-reg');
+    const types = checked('f-typ');
+    const conds = checked('f-cnd');
+    const pmin  = num('pmin');
+    const pmax  = num('pmax');
+    const q     = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+
+    let list = lots.filter(l => l.active);
+    if (regs.length)  list = list.filter(l => regs.includes(l.region));
+    if (types.length) list = list.filter(l => types.includes(l.type));
+    if (conds.length) list = list.filter(l => conds.includes(l.condition));
+    if (pmin !== null) list = list.filter(l => l.price === null || l.price >= pmin);
+    if (pmax !== null) list = list.filter(l => l.price === null || l.price <= pmax);
+    if (q) list = list.filter(l =>
+        l.port.toLowerCase().includes(q) ||
+        l.id.toLowerCase().includes(q) ||
+        l.type.toLowerCase().includes(q) ||
+        l.region.toLowerCase().includes(q)
+    );
+
+    const sort = document.getElementById('sort-sel').value;
+    list.sort((a,b) => {
+        if (sort==='deadline')   return new Date(a.deadline)-new Date(b.deadline);
+        if (sort==='price-asc')  return (a.price||99999)-(b.price||99999);
+        if (sort==='price-desc') return (b.price||0)-(a.price||0);
+        if (sort==='qty')        return b.qty-a.qty;
+        if (sort==='region')     return a.region.localeCompare(b.region);
+        return 0;
+    });
+
+    document.getElementById('cnt').textContent = list.length;
+    const grid = document.getElementById('grid');
+
+    if (!list.length) {
+        grid.innerHTML = `<div class="empty">
+            <i class="fas fa-box-open"></i>
+            <h3>해당 조건의 매각 LOT가 없습니다</h3>
+            <p>필터를 조정하거나 <span onclick="resetFilters()" style="color:var(--blue);cursor:pointer;font-weight:700;">초기화</span> 해보세요</p>
+        </div>`;
+        return;
+    }
+    grid.innerHTML = list.map(renderCard).join('');
+}
+
+function resetFilters() {
+    document.querySelectorAll('.f-reg,.f-typ,.f-cnd').forEach(c=>c.checked=false);
+    document.getElementById('pmin').value='';
+    document.getElementById('pmax').value='';
+    const si = document.getElementById('search-input');
+    if (si) si.value = '';
+    applyAll();
+}
+
+function renderCard(lot) {
+    const days  = Math.ceil((new Date(lot.deadline)-new Date())/(864e5));
+    const urg   = days <= 14;
+    const cCls  = { IICL:'cond-iicl', CWO:'cond-cwo', 'AS-IS':'cond-asis' }[lot.condition] || 'cond-cwo';
+    const total = lot.price ? `USD ${(lot.price*lot.qty).toLocaleString()}` : '';
+    const t = lot.type;
+    const typeClass = (t.includes('RF')) ? 'card-rf'
+                    : (t.includes('OT')) ? 'card-ot'
+                    : (t.includes('FR') || t.includes('RACK') || t.includes('CON')) ? 'card-fr'
+                    : 'card-gp';
+    const typeBadgeCls = (t.includes('RF')) ? 'type-rf'
+                       : (t.includes('OT')) ? 'type-ot'
+                       : (t.includes('FR') || t.includes('RACK') || t.includes('CON')) ? 'type-fr'
+                       : '';
+    const bidCnt = bids.filter(b => b.lotId === lot.id).length;
+    const bidBadge = bidCnt > 0
+        ? `<span class="bid-count-badge"><i class="fas fa-fire"></i> ${bidCnt}개 업체 입찰 접수</span>`
+        : `<span class="bid-count-badge none"><i class="fas fa-inbox"></i> 입찰 대기중</span>`;
+
+    return `
+    <div class="container-card ${typeClass}" id="card-${lot.id}">
+        <div class="card-head">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" class="lot-cb" data-id="${lot.id}"
+                       onchange="toggleSel('${lot.id}',this)" title="선택">
+                <div class="card-type ${typeBadgeCls}">${lot.type}</div>
+            </div>
+            <span class="cond-badge ${cCls}">${lot.condition}</span>
+        </div>
+        <div class="card-location">
+            <i class="fas fa-map-marker-alt"></i>
+            <strong>${lot.region}</strong> · ${lot.port}
+            <span class="lot-id">${lot.id}</span>
+        </div>
+        <div class="card-specs">
+            <div>
+                <div class="spec-lbl">수량</div>
+                <div class="spec-val">${lot.qty.toLocaleString()} Units</div>
+            </div>
+            <div>
+                <div class="spec-lbl">제조연도</div>
+                <div class="spec-val">${lot.year || '—'}</div>
+            </div>
+            <div>
+                <div class="spec-lbl">SIZE</div>
+                <div class="spec-val">${lot.type.replace(/[A-Z]+$/,'')}</div>
+            </div>
+            <div>
+                <div class="spec-lbl">타입</div>
+                <div class="spec-val small">${TYPE_NAME[lot.type]||lot.type}</div>
+            </div>
+        </div>
+        <div class="card-price">
+            ${lot.price
+                ? `<div>
+                     <div style="font-size:11px;color:var(--text-light);">희망 단가</div>
+                     <div class="price-amount">USD ${lot.price.toLocaleString()}<span class="unit"> /Unit</span></div>
+                   </div>
+                   <div class="price-total">총 ${total}</div>`
+                : `<div class="price-open"><i class="fas fa-gavel"></i> 입찰가 협의</div>`
+            }
+        </div>
+        <div class="card-deadline ${urg?'deadline-soon':''}">
+            <i class="fas fa-clock"></i>
+            입찰 마감 : ${lot.deadline}
+            ${urg
+                ? `<span class="deadline-tag">D-${days}</span>`
+                : `<span class="deadline-tag-normal">D-${days}</span>`}
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            ${bidBadge}
+        </div>
+        <button class="btn-bid" onclick="openBid('${lot.id}')">
+            <i class="fas fa-gavel"></i> 입찰 의뢰 하기
+        </button>
+    </div>`;
+}
+
+/* ── MULTI-SELECT ── */
+let selectedLots = new Set();
+
+function toggleSel(id, cb) {
+    if (cb.checked) { selectedLots.add(id); } else { selectedLots.delete(id); }
+    document.getElementById('card-'+id)?.classList.toggle('selected', cb.checked);
+    updateSelBar();
+}
+
+function updateSelBar() {
+    const n = selectedLots.size;
+    document.getElementById('sel-cnt').textContent = n;
+    document.getElementById('select-bar').classList.toggle('show', n > 0);
+    // 전체선택/전체해제 버튼 토글
+    const allBtn  = document.getElementById('sel-all-btn');
+    const deselBtn = document.getElementById('desel-all-btn');
+    if (allBtn && deselBtn) {
+        allBtn.style.display  = n > 0 ? 'none' : '';
+        deselBtn.style.display = n > 0 ? '' : 'none';
+    }
+}
+
+function selectAll() {
+    document.querySelectorAll('.lot-cb').forEach(cb => {
+        if (!cb.checked) {
+            cb.checked = true;
+            selectedLots.add(cb.dataset.id);
+            document.getElementById('card-' + cb.dataset.id)?.classList.add('selected');
+        }
+    });
+    updateSelBar();
+}
+
+function clearSel() {
+    selectedLots.clear();
+    document.querySelectorAll('.lot-cb').forEach(cb => {
+        cb.checked = false;
+        document.getElementById('card-' + cb.dataset.id)?.classList.remove('selected');
+    });
+    updateSelBar();
+}
+
+function openMultiBid() {
+    if (!selectedLots.size) return;
+    const selList = lots.filter(l => selectedLots.has(l.id) && l.active);
+    bidLot = selList;
+
+    document.getElementById('modal-title').innerHTML =
+        `<i class="fas fa-layer-group" style="margin-right:8px;color:var(--gold);"></i>일괄 입찰 의뢰서 (${selList.length}개 LOT)`;
+
+    document.getElementById('lot-sum').innerHTML = `
+        <h3><i class="fas fa-list-check" style="margin-right:6px;color:var(--blue);"></i>
+            선택 LOT ${selList.length}개 — LOT별 희망 수량·단가를 입력해주세요
+        </h3>
+        <div style="overflow-x:auto;">
+            <table class="multi-lot-tbl">
+                <thead><tr>
+                    <th>LOT</th><th>항구</th><th>타입</th><th>상태</th>
+                    <th>가용수량</th><th>희망수량 *</th><th>입찰단가(USD/Unit) *</th>
+                </tr></thead>
+                <tbody>
+                    ${selList.map(l => `<tr>
+                        <td><strong>${l.id}</strong></td>
+                        <td>${l.port}</td>
+                        <td><strong>${l.type}</strong></td>
+                        <td>${l.condition}</td>
+                        <td>${l.qty.toLocaleString()} U</td>
+                        <td><input type="number" class="m-qty" data-id="${l.id}"
+                                   min="1" max="${l.qty}" placeholder="최대 ${l.qty}"></td>
+                        <td><input type="number" class="m-price" data-id="${l.id}"
+                                   min="1" placeholder="${l.price ? l.price.toLocaleString() : '협의'}"></td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+
+    document.getElementById('single-fields').style.display = 'none';
+    document.getElementById('bid-ov').classList.add('on');
+}
+
+/* ── BID MODAL ── */
+function openBid(id) {
+    const lot = lots.find(l=>l.id===id);
+    if (!lot) return;
+    bidLot = lot;
+
+    document.getElementById('lot-sum').innerHTML = `
+        <h3><i class="fas fa-box" style="margin-right:6px; color:var(--blue);"></i>
+            ${lot.type} — ${lot.port} (${lot.region})
+        </h3>
+        <div class="lot-meta">${TYPE_NAME[lot.type]||lot.type} &nbsp;·&nbsp; 등급: ${lot.condition} &nbsp;·&nbsp; ${lot.id}</div>
+        <div class="lot-specs">
+            <div class="lot-spec">
+                <div class="v">${lot.qty.toLocaleString()} Units</div>
+                <div class="l">총 수량</div>
+            </div>
+            <div class="lot-spec">
+                <div class="v">${lot.price ? 'USD '+lot.price.toLocaleString() : '협의'}</div>
+                <div class="l">희망 단가</div>
+            </div>
+            <div class="lot-spec">
+                <div class="v">${lot.deadline}</div>
+                <div class="l">입찰 마감</div>
+            </div>
+        </div>`;
+
+    document.getElementById('b-qty').max = lot.qty;
+    document.getElementById('b-qty').placeholder = `최대 ${lot.qty} Units`;
+    document.getElementById('bid-ov').classList.add('on');
+}
+
+function closeBid() {
+    document.getElementById('bid-ov').classList.remove('on');
+    ['b-company','b-name','b-email','b-phone','b-qty','b-price','b-note'].forEach(i => {
+        document.getElementById(i).value='';
+    });
+    // Reset to single mode
+    document.getElementById('single-fields').style.display = '';
+    document.getElementById('modal-title').innerHTML =
+        '<i class="fas fa-gavel" style="margin-right:8px;color:var(--gold);"></i>입찰 의뢰서 작성';
+    bidLot = null;
+}
+
+function submitBid() {
+    const co  = v('b-company'), nm = v('b-name'), em = v('b-email');
+    const ph  = v('b-phone');
+    const inc = document.getElementById('b-inco').value;
+    const td  = v('b-take'),    nt = v('b-note');
+
+    if (!co||!nm||!em) {
+        alert('필수 항목(회사명·담당자·이메일)을 입력해주세요.'); return;
+    }
+
+    let subject, body;
+
+    /* ── 일괄 입찰 (다중 LOT) ── */
+    if (Array.isArray(bidLot)) {
+        const rows = [];
+        let allFilled = true;
+        bidLot.forEach(l => {
+            const qty   = document.querySelector(`.m-qty[data-id="${l.id}"]`)?.value;
+            const price = document.querySelector(`.m-price[data-id="${l.id}"]`)?.value;
+            if (!qty || !price) { allFilled = false; return; }
+            rows.push({ l, qty: Number(qty), price: Number(price) });
+        });
+        if (!allFilled) {
+            alert('모든 LOT의 희망 수량과 입찰 단가를 입력해주세요.'); return;
+        }
+
+        const lotLines = rows.map((r,i) =>
+            `  ${i+1}. ${r.l.id} | ${r.l.port} ${r.l.type} | 수량: ${r.qty.toLocaleString()} Units | 단가: USD ${r.price.toLocaleString()} | 소계: USD ${(r.qty*r.price).toLocaleString()}`
+        ).join('\n');
+        const grandTotal = rows.reduce((s,r) => s + r.qty*r.price, 0);
+
+        subject = `[DP매각 일괄입찰] ${co} — ${rows.length}개 LOT`;
+        body = `안녕하세요, 장금상선·흥아라인 장비팀 귀중.
+
+아래와 같이 컨테이너 일괄 매입 입찰 의뢰 드립니다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[일괄 입찰 LOT 목록 — ${rows.length}개]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${lotLines}
+
+입찰 합계 총액  : USD ${grandTotal.toLocaleString()}
+인도 조건       : ${inc}
+희망 인수일     : ${td||'협의'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[구매자 정보]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+회 사 명    : ${co}
+담 당 자    : ${nm}
+이 메 일    : ${em}
+연 락 처    : ${ph||'—'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[비고]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${nt||'없음'}
+
+감사합니다.
+${co}  ${nm}  드림`;
+
+        rows.forEach(r => {
+            bids.push({
+                id:'BID'+Date.now()+Math.random().toString(36).slice(2,5),
+                lotId:r.l.id, port:r.l.port, type:r.l.type,
+                company:co, name:nm, email:em, phone:ph,
+                qty:r.qty, price:r.price, inco:inc, take:td, note:nt,
+                created: new Date().toISOString().slice(0,10)
+            });
+        });
+
+    /* ── 단건 입찰 ── */
+    } else {
+        const qty = v('b-qty'), pr = v('b-price');
+        if (!qty||!pr) {
+            alert('희망 수량과 입찰 단가를 입력해주세요.'); return;
+        }
+        const lot = bidLot;
+        const total = (Number(pr)*Number(qty)).toLocaleString();
+
+        subject = `[DP매각 입찰] ${co} — ${lot.port} ${lot.type} ${qty}Units`;
+        body = `안녕하세요, 장금상선·흥아라인 장비팀 귀중.
+
+아래와 같이 컨테이너 매입 입찰 의뢰 드립니다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[입찰 LOT 정보]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LOT 번호    : ${lot.id}
+지역 / 항구  : ${lot.region} / ${lot.port}
+컨테이너     : ${lot.type}  (${TYPE_NAME[lot.type]||''})
+상태 등급    : ${lot.condition}
+제조 연도    : ${lot.year||'—'}
+입찰 마감    : ${lot.deadline}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[입찰 내용]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+희망 수량    : ${Number(qty).toLocaleString()} Units
+입찰 단가    : USD ${Number(pr).toLocaleString()} / Unit
+입찰 총액    : USD ${total}
+인도 조건    : ${inc}
+희망 인수일  : ${td||'협의'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[구매자 정보]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+회 사 명    : ${co}
+담 당 자    : ${nm}
+이 메 일    : ${em}
+연 락 처    : ${ph||'—'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[비고]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${nt||'없음'}
+
+감사합니다.
+${co}  ${nm}  드림`;
+
+        bids.push({
+            id:'BID'+Date.now(), lotId:lot.id, port:lot.port, type:lot.type,
+            company:co, name:nm, email:em, phone:ph,
+            qty:Number(qty), price:Number(pr), inco:inc, take:td, note:nt,
+            created: new Date().toISOString().slice(0,10)
+        });
+    }
+
+    saveBids();
+    window.location.href =
+        `mailto:${SALES_MAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    closeBid();
+    clearSel();
+    alert(`입찰 의뢰가 접수되었습니다!\n메일 프로그램이 열리면 내용 확인 후 발송해주세요.\n담당팀이 검토 후 연락드립니다.`);
+}
+
+/* ── ADMIN ── */
+function openLogin() {
+    document.getElementById('login-ov').classList.add('on');
+    setTimeout(() => document.getElementById('pw-in').focus(), 150);
+}
+function closeLogin() {
+    document.getElementById('login-ov').classList.remove('on');
+    document.getElementById('pw-in').value='';
+    document.getElementById('login-err').style.display='none';
+}
+function doLogin() {
+    if (document.getElementById('pw-in').value === ADMIN_PW) {
+        closeLogin();
+        document.getElementById('buyer-portal').style.display='none';
+        document.getElementById('admin-panel').style.display='block';
+        renderAdmin();
+    } else {
+        document.getElementById('login-err').style.display='block';
+    }
+}
+function adminLogout() {
+    document.getElementById('admin-panel').style.display='none';
+    document.getElementById('buyer-portal').style.display='block';
+}
+function goBuyer() {
+    document.getElementById('admin-panel').style.display='none';
+    document.getElementById('buyer-portal').style.display='block';
+    renderBuyer();
+}
+
+function renderAdmin() {
+    const active = lots.filter(l=>l.active);
+    const units  = active.reduce((s,l)=>s+l.qty,0);
+    const tv     = active.filter(l=>l.price).reduce((s,l)=>s+l.price*l.qty,0);
+
+    document.getElementById('kpi').innerHTML = `
+        <div class="kpi-card"><div class="kpi-icon blue"><i class="fas fa-boxes"></i></div>
+            <div><div class="kpi-val">${active.length}</div><div class="kpi-lbl">활성 LOT</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon gold"><i class="fas fa-cubes"></i></div>
+            <div><div class="kpi-val">${units.toLocaleString()}</div><div class="kpi-lbl">총 Units</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon green"><i class="fas fa-envelope-open-text"></i></div>
+            <div><div class="kpi-val">${bids.length}</div><div class="kpi-lbl">접수 입찰</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon red"><i class="fas fa-dollar-sign"></i></div>
+            <div><div class="kpi-val">${tv>0?'$'+(tv/1000).toFixed(0)+'K':'—'}</div><div class="kpi-lbl">희망가액(USD)</div></div></div>
+    `;
+    renderLots();
+    renderSummary();
+    renderBids();
+}
+
+function renderSummary() {
+    const container = document.getElementById('bid-summary');
+    if (!container) return;
+    const activeLots = lots.filter(l => l.active);
+    if (!activeLots.length) {
+        container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-mid);">등록된 LOT가 없습니다</div>`;
+        return;
+    }
+    const rows = activeLots.map(lot => {
+        const lb = bids.filter(b => b.lotId === lot.id);
+        const cnt = lb.length;
+        const companies = [...new Set(lb.map(b => b.company))];
+        const prices = lb.map(b => b.price).filter(Boolean);
+        const maxP = prices.length ? Math.max(...prices) : null;
+        const minP = prices.length ? Math.min(...prices) : null;
+        const maxBars = 5;
+        const bars = Array.from({length: maxBars}, (_,i) =>
+            `<div class="bid-bar ${i < Math.min(cnt, maxBars) ? 'filled' : ''}"></div>`).join('');
+        const ratio = lot.price && maxP ? ((maxP / lot.price) * 100).toFixed(0) : null;
+        const ratioBadge = ratio
+            ? `<span class="ratio-badge ${ratio >= 100 ? 'ratio-over' : 'ratio-under'}">${ratio}%</span>`
+            : '<span style="color:var(--text-light)">—</span>';
+        const companyHtml = companies.length
+            ? companies.map(c => `<span class="company-tag">${c}</span>`).join('')
+            : `<span style="color:var(--text-light);font-size:11px;">대기중</span>`;
+        return `
+        <tr>
+            <td><strong>${lot.id}</strong></td>
+            <td><strong>${lot.port}</strong><br><span style="font-size:11px;color:var(--text-light);">${lot.region}</span></td>
+            <td><strong>${lot.type}</strong></td>
+            <td>${lot.price ? 'USD '+lot.price.toLocaleString() : '협의'}</td>
+            <td>
+                <div style="display:flex;align-items:center;gap:7px;">
+                    <div class="bid-bar-wrap">${bars}</div>
+                    <strong style="${cnt>0?'color:var(--red)':''}">${cnt}건</strong>
+                </div>
+            </td>
+            <td>${companyHtml}</td>
+            <td>${maxP ? 'USD '+maxP.toLocaleString() : '<span style="color:var(--text-light)">—</span>'}</td>
+            <td>${minP && maxP && minP !== maxP ? 'USD '+minP.toLocaleString() : '<span style="color:var(--text-light)">—</span>'}</td>
+            <td>${ratioBadge}</td>
+        </tr>`;
+    }).join('');
+    container.innerHTML = `
+    <div class="tbl-wrap">
+        <table class="summary-table">
+            <thead><tr>
+                <th>LOT</th><th>항구</th><th>타입</th><th>희망단가</th>
+                <th>입찰건수</th><th>입찰 업체</th><th>최고 입찰가</th><th>최저 입찰가</th><th>달성률</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    </div>`;
+}
+
+function renderLots() {
+    const show = tabState==='active' ? lots.filter(l=>l.active) : lots;
+    const tbody = document.getElementById('lots-body');
+    if (!show.length) {
+        tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-mid);">등록된 LOT가 없습니다</td></tr>`;
+        return;
+    }
+    const CCLS = { IICL:'cond-iicl', CWO:'cond-cwo', 'AS-IS':'cond-asis' };
+    tbody.innerHTML = show.map(l=>`
+        <tr>
+            <td><strong>${l.id}</strong></td>
+            <td><strong>${l.port}</strong><br><span style="font-size:11px;color:var(--text-light);">${l.region}</span></td>
+            <td><strong>${l.type}</strong></td>
+            <td>${l.qty.toLocaleString()} U</td>
+            <td><span class="cond-badge ${CCLS[l.condition]}">${l.condition}</span></td>
+            <td>${l.price ? l.price.toLocaleString() : '협의'}</td>
+            <td style="font-size:12px;">${l.deadline}</td>
+            <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="lot-toggle-wrap" title="${l.active?'클릭하여 비활성화':'클릭하여 활성화'}">
+                        <label class="lot-toggle">
+                            <input type="checkbox" ${l.active?'checked':''} onchange="toggleLot('${l.id}')">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label ${l.active?'on':''}">${l.active?'활성':'비활성'}</span>
+                    </div>
+                    <button class="btn btn-sm btn-ghost" onclick="delLot('${l.id}')" title="삭제">
+                        <i class="fas fa-trash" style="color:var(--danger);"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>`).join('');
+}
+
+function renderBids() {
+    const tbody = document.getElementById('bids-body');
+    if (!bids.length) {
+        tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-mid);">접수된 입찰이 없습니다</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = [...bids].reverse().map(b=>`
+        <tr>
+            <td style="font-size:11px;">${b.created}</td>
+            <td><strong>${b.company}</strong></td>
+            <td>${b.name}</td>
+            <td>${b.port}</td>
+            <td><strong>${b.type}</strong></td>
+            <td>${b.qty.toLocaleString()}</td>
+            <td>USD ${b.price.toLocaleString()}</td>
+            <td>USD ${(b.price*b.qty).toLocaleString()}</td>
+            <td style="font-size:11px;">${b.phone||b.email}</td>
+        </tr>`).join('');
+}
+
+function switchTab(t) {
+    tabState = t;
+    document.getElementById('tab-active').classList.toggle('on', t==='active');
+    document.getElementById('tab-all').classList.toggle('on', t==='all');
+    renderLots();
+}
+
+function toggleLot(id) {
+    const l = lots.find(x=>x.id===id);
+    if (l) { l.active=!l.active; save(); renderAdmin(); }
+}
+function delLot(id) {
+    if (!confirm('이 LOT를 삭제하시겠습니까?')) return;
+    lots = lots.filter(x=>x.id!==id);
+    save(); renderAdmin();
+}
+function printBids() {
+    if (!bids.length) { alert('인쇄할 입찰 내역이 없습니다.'); return; }
+    const today = new Date().toLocaleDateString('ko-KR');
+    const rows = [...bids].reverse().map((b,i) => `
+        <tr>
+            <td>${i+1}</td>
+            <td>${b.created}</td>
+            <td><strong>${b.lotId||'—'}</strong></td>
+            <td><strong>${b.company}</strong></td>
+            <td>${b.name}</td>
+            <td>${b.port} / ${b.type}</td>
+            <td>${b.qty.toLocaleString()} Units</td>
+            <td>USD ${b.price.toLocaleString()}</td>
+            <td>USD ${(b.price*b.qty).toLocaleString()}</td>
+            <td>${b.inco||'—'}</td>
+            <td>${b.phone||b.email}</td>
+        </tr>`).join('');
+    const grandTotal = bids.reduce((s,b)=>s+b.price*b.qty,0);
+    const win = window.open('','_blank','width=1100,height=800');
+    win.document.write(`<!DOCTYPE html><html lang="ko"><head>
+        <meta charset="UTF-8">
+        <title>DP 입찰 내역 — ${today}</title>
+        <style>
+            body { font-family: 'Malgun Gothic', sans-serif; font-size: 12px; color: #1e293b; margin: 0; padding: 20px; }
+            .print-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #CC1200; padding-bottom: 12px; margin-bottom: 20px; }
+            .print-logo { font-size: 18px; font-weight: 900; color: #0A1628; }
+            .print-logo span { color: #CC1200; }
+            .print-meta { font-size: 11px; color: #64748b; text-align: right; line-height: 1.8; }
+            h2 { font-size: 15px; font-weight: 800; color: #0A1628; margin: 0 0 16px; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th { background: #0A1628; color: white; padding: 8px 6px; text-align: left; font-size: 10px; letter-spacing: 0.3px; }
+            td { padding: 7px 6px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+            tr:nth-child(even) td { background: #f8fafc; }
+            .total-row td { background: #fff0ee; font-weight: 800; font-size: 12px; border-top: 2px solid #CC1200; }
+            .footer-note { margin-top: 24px; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+            @media print { button { display: none; } }
+        </style>
+    </head><body>
+        <div class="print-header">
+            <div class="print-logo">장금상선(주) · 흥아라인(주)<br><span>컨테이너 DP 매각 — 입찰 내역</span></div>
+            <div class="print-meta">출력일 : ${today}<br>총 ${bids.length}건 입찰 접수<br>container@sinokor.co.kr</div>
+        </div>
+        <table>
+            <thead><tr>
+                <th>#</th><th>접수일</th><th>LOT ID</th><th>회사명</th><th>담당자</th>
+                <th>항구 / 타입</th><th>수량</th><th>단가</th><th>소계</th><th>인도조건</th><th>연락처</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+            <tfoot><tr class="total-row">
+                <td colspan="8" style="text-align:right;">합계 총액</td>
+                <td colspan="3">USD ${grandTotal.toLocaleString()}</td>
+            </tr></tfoot>
+        </table>
+        <div class="footer-note">* 본 문서는 장금상선·흥아라인 컨테이너 DP 매각 비딩 플랫폼에서 출력되었습니다. 최종 낙찰은 담당자 확인 후 별도 통보됩니다.</div>
+        <script>window.onload=()=>{window.print();}<\/script>
+    </body></html>`);
+    win.document.close();
+}
+
+function clearBids() {
+    if (!confirm('모든 입찰 내역을 삭제하시겠습니까?')) return;
+    bids=[];
+    saveBids(); renderBids(); renderAdmin();
+}
+
+/* ── PORT DROPDOWN ── */
+function updatePorts() {
+    const r = document.getElementById('n-region').value;
+    const ps = PORTS[r] || [];
+    document.getElementById('n-port').innerHTML =
+        `<option value="">선택</option>` + ps.map(p=>`<option value="${p}">${p}</option>`).join('');
+}
+
+/* ── ADD LOT ── */
+function addLot(e) {
+    e.preventDefault();
+    const lot = {
+        id: 'LOT' + String(Date.now()).slice(-6),
+        region: v('n-region'), port: v('n-port'),
+        type: v('n-type'), qty: Number(v('n-qty')),
+        year: v('n-year'), condition: v('n-cond'),
+        price: v('n-price') ? Number(v('n-price')) : null,
+        deadline: v('n-deadline'), note: v('n-note'),
+        active: true, created: new Date().toISOString().slice(0,10)
+    };
+    lots.push(lot);
+    save();
+    e.target.reset();
+    document.getElementById('n-port').innerHTML='<option value="">지역 먼저 선택</option>';
+    renderAdmin();
+    alert(`✅ ${lot.id} 등록 완료!\n${lot.region} / ${lot.port} · ${lot.type} · ${lot.qty.toLocaleString()} Units`);
+}
+
+/* ── HELPERS ── */
+function v(id)       { return document.getElementById(id)?.value.trim()||''; }
+function num(id)     { const n=Number(document.getElementById(id)?.value); return isNaN(n)||n===0?null:n; }
+function checked(cls){ return [...document.querySelectorAll(`.${cls}:checked`)].map(c=>c.value); }
+function goTo(id){ document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
+
+/* ── CONTAINER SPECS (장금상선 공식 기준) ── */
+const SPECS = {
+    gp: {
+        label: '일반 DRY', icon: 'fas fa-box',
+        color: 'linear-gradient(135deg,#0D1F3C,#1a3260)',
+        items: [
+            { name:"20' DRY",      code:'20GP',
+              int:{L:'5,898',W:'2,352',H:'2,393'}, door:{W:'2,340',H:'2,280'},
+              tare:'2,180', payload:'28,300', cubic:'33.2' },
+            { name:"40' DRY",      code:'40GP',
+              int:{L:'12,032',W:'2,352',H:'2,393'}, door:{W:'2,340',H:'2,280'},
+              tare:'3,550', payload:'28,950', cubic:'67.8' },
+            { name:"40' HIGH CUBE",code:'40HC',
+              int:{L:'12,032',W:'2,352',H:'2,698'}, door:{W:'2,340',H:'2,585'},
+              tare:'3,700', payload:'28,800', cubic:'76.4' }
+        ]
+    },
+    rf: {
+        label: '냉동 RF', icon: 'fas fa-snowflake',
+        color: 'linear-gradient(135deg,#0c4a6e,#0369a1)',
+        items: [
+            { name:"20' REEFER",   code:'20RF',
+              int:{L:'5,454',W:'2,290',H:'2,266'}, door:{W:'2,294',H:'2,224'},
+              tare:'2,800', payload:'27,680', cubic:'28.3' },
+            { name:"40' REEFER HC",code:'40RFHC',
+              int:{L:'11,590',W:'2,290',H:'2,547'}, door:{W:'2,294',H:'2,505'},
+              tare:'4,460', payload:'30,540', cubic:'67.6' }
+        ]
+    },
+    ot: {
+        label: '오픈탑 OT', icon: 'fas fa-box-open',
+        color: 'linear-gradient(135deg,#3b0764,#6d28d9)',
+        items: [
+            { name:"20' OPEN TOP", code:'20OT',
+              int:{L:'5,898',W:'2,352',H:'2,348'}, door:{W:'2,340',H:'2,280'},
+              tare:'2,350', payload:'28,130', cubic:'32.5' },
+            { name:"40' OPEN TOP", code:'40OT',
+              int:{L:'12,032',W:'2,352',H:'2,393'}, door:{W:'2,340',H:'2,280'},
+              tare:'3,740', payload:'26,740', cubic:'65.9' }
+        ]
+    },
+    fr: {
+        label: '플랫랙 FR', icon: 'fas fa-layer-group',
+        color: 'linear-gradient(135deg,#1e293b,#334155)',
+        items: [
+            { name:"20' FLAT RACK",  code:'20FR',
+              int:{L:'5,644', W:'2,198',H:'2,231'},            door:null,
+              tare:'2,800', payload:'31,200', cubic:null },
+            { name:"40' FLAT RACK",  code:'40FR',
+              int:{L:'11,658',W:'2,224',H:'1,953'},            door:null,
+              tare:'4,950', payload:'40,050', cubic:null },
+            { name:"SUPER RACK",     code:'SUPER RACK',
+              int:{L:'12,172',W:'2,374',H:'2,264 / 3,483'}, door:null,
+              tare:'5,800', payload:'50,000', cubic:null,
+              note:'높이: 2,264mm (접힘) / 3,483mm (최대 확장)' },
+            { name:"SUPER CON",      code:'SUPER CON',
+              int:{L:'12,172',W:'2,374',H:'2,264 / 3,483'}, door:null,
+              tare:'5,980', payload:'54,000', cubic:null,
+              note:'높이: 2,264mm (접힘) / 3,483mm (최대 확장)' }
+        ]
+    }
+};
+
+let activeSpec = 'gp';
+
+function renderSpecSection() {
+    document.getElementById('spec-tabs').innerHTML =
+        Object.entries(SPECS).map(([key, cat]) => `
+            <button class="spec-tab ${key===activeSpec?'on':''}" onclick="switchSpec('${key}',this)">
+                <i class="${cat.icon}"></i> ${cat.label}
+            </button>`).join('');
+    renderSpecCards();
+}
+
+function switchSpec(key, el) {
+    activeSpec = key;
+    document.querySelectorAll('.spec-tab').forEach(t => t.classList.remove('on'));
+    el.classList.add('on');
+    renderSpecCards();
+}
+
+function renderSpecCards() {
+    const cat = SPECS[activeSpec];
+    document.getElementById('spec-content').innerHTML =
+        `<div class="spec-grid">${cat.items.map(item => `
+        <div class="spec-card">
+            <div class="spec-card-head" style="background:${cat.color}">
+                <div class="spec-type-icon"><i class="${cat.icon}"></i></div>
+                <div>
+                    <div class="spec-type-name">${item.name}</div>
+                    <div class="spec-type-code">${item.code}</div>
+                </div>
+            </div>
+            <div class="spec-key-stats">
+                <div class="spec-key-stat">
+                    <div class="kv">${item.payload}<span style="font-size:10px;font-weight:500"> kg</span></div>
+                    <div class="kl">최대 적재<br>Payload</div>
+                </div>
+                ${item.cubic
+                    ? `<div class="spec-key-stat">
+                           <div class="kv">${item.cubic}<span style="font-size:10px;font-weight:500"> ㎥</span></div>
+                           <div class="kl">내부 용적<br>Cubic</div>
+                       </div>`
+                    : `<div class="spec-key-stat">
+                           <div class="kv">${item.tare}<span style="font-size:10px;font-weight:500"> kg</span></div>
+                           <div class="kl">자체중량<br>Tare</div>
+                       </div>`}
+                <div class="spec-key-stat">
+                    <div class="kv">${item.int.L}<span style="font-size:10px;font-weight:500"> mm</span></div>
+                    <div class="kl">내부 길이<br>Int. Length</div>
+                </div>
+            </div>
+            <div class="spec-table-wrap">
+                <table class="spec-table">
+                    <tr class="spec-sec-row"><td colspan="2">내부 치수 Interior Dimensions (mm)</td></tr>
+                    <tr><td>길이 Length</td><td class="spec-num">${item.int.L}</td></tr>
+                    <tr><td>너비 Width</td><td class="spec-num">${item.int.W}</td></tr>
+                    <tr><td>높이 Height</td><td class="spec-num">${item.int.H}</td></tr>
+                    ${item.door ? `
+                    <tr class="spec-sec-row"><td colspan="2">문 개구부 Door Opening (mm)</td></tr>
+                    <tr><td>폭 Width</td><td class="spec-num">${item.door.W}</td></tr>
+                    <tr><td>높이 Height</td><td class="spec-num">${item.door.H}</td></tr>` : ''}
+                    <tr class="spec-sec-row"><td colspan="2">중량 / 용적</td></tr>
+                    <tr><td>자체중량 Tare Weight</td><td class="spec-num">${item.tare} kg</td></tr>
+                    <tr><td>최대 적재 Payload</td><td class="spec-num hl">${item.payload} kg</td></tr>
+                    ${item.cubic
+                        ? `<tr><td>내부 용적 Cubic</td><td class="spec-num hl">${item.cubic} ㎥</td></tr>`
+                        : ''}
+                </table>
+                ${item.note ? `<div style="margin-top:10px; padding:8px 10px; background:#fffbeb; border-left:3px solid var(--gold); border-radius:6px; font-size:11px; color:var(--gold-dark); font-weight:600;">
+                    <i class="fas fa-info-circle" style="margin-right:4px;"></i>${item.note}</div>` : ''}
+            </div>
+        </div>`).join('')}</div>`;
+}
+
+/* ── START ── */
+init();
+</script>
+</body>
+</html>
