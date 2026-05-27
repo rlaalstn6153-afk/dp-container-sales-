@@ -480,3 +480,80 @@ function sbSubscribeAllBids(callback) {
   };
 }
 
+/**
+ * 회사명으로 입찰 조회 — 구매자 "내 입찰 현황"
+ * @param {string} company
+ * @returns {Promise<{ok:boolean, data:object[], error?:any}>}
+ */
+async function sbLoadBidsByCompany(company) {
+  if (!_sbAvailable) {
+    const all = _lsLoadBids();
+    const data = all.filter(b => b.company && b.company.includes(company));
+    return { ok: true, data };
+  }
+  try {
+    const { data, error } = await _sb
+      .from('dp_bids')
+      .select('*')
+      .ilike('company', `%${company}%`)
+      .order('created', { ascending: false });
+    if (error) throw error;
+    return { ok: true, data: (data || []).map(_bidFromRow) };
+  } catch (e) {
+    console.error('[sbLoadBidsByCompany] Supabase 오류 → localStorage fallback', e);
+    const all = _lsLoadBids();
+    const data = all.filter(b => b.company && b.company.includes(company));
+    return { ok: false, data, error: e };
+  }
+}
+
+/**
+ * 알림 구독자 저장
+ * @param {object} sub  - { id, company, name, email, created }
+ * @returns {Promise<{ok:boolean, error?:any}>}
+ */
+async function sbSaveSubscriber(sub) {
+  if (!_sbAvailable) {
+    const arr = JSON.parse(localStorage.getItem('dp_subscribers') || '[]');
+    arr.push(sub);
+    localStorage.setItem('dp_subscribers', JSON.stringify(arr));
+    return { ok: true };
+  }
+  try {
+    const { error } = await _sb
+      .from('dp_subscribers')
+      .upsert({ id: sub.id, company: sub.company, name: sub.name, email: sub.email, created: sub.created }, { onConflict: 'id' });
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) {
+    console.error('[sbSaveSubscriber] Supabase 오류 → localStorage fallback', e);
+    const arr = JSON.parse(localStorage.getItem('dp_subscribers') || '[]');
+    arr.push(sub);
+    localStorage.setItem('dp_subscribers', JSON.stringify(arr));
+    return { ok: false, error: e };
+  }
+}
+
+/**
+ * 전체 구독자 조회 — 관리자 전용
+ * @returns {Promise<{ok:boolean, data:object[], error?:any}>}
+ */
+async function sbLoadSubscribers() {
+  if (!_sbAvailable) {
+    const data = JSON.parse(localStorage.getItem('dp_subscribers') || '[]');
+    return { ok: true, data };
+  }
+  try {
+    const { data, error } = await _sb
+      .from('dp_subscribers')
+      .select('*')
+      .order('created', { ascending: false });
+    if (error) throw error;
+    return { ok: true, data: data || [] };
+  } catch (e) {
+    console.error('[sbLoadSubscribers] Supabase 오류 → localStorage fallback', e);
+    const data = JSON.parse(localStorage.getItem('dp_subscribers') || '[]');
+    return { ok: false, data, error: e };
+  }
+}
+

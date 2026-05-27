@@ -992,6 +992,68 @@
             .hero-legend { gap: 6px; }
         }
     </style>
+    <style>
+    /* ── 찜하기 버튼 ── */
+    .fav-btn { background:none; border:none; cursor:pointer; font-size:16px; line-height:1;
+               color:#d1d5db; padding:2px 4px; transition:color .2s,transform .15s; }
+    .fav-btn:hover { color:#f43f5e; transform:scale(1.2); }
+    .fav-btn.active { color:#f43f5e; }
+
+    /* ── 링크 복사 버튼 ── */
+    .copy-link-btn { background:none; border:none; cursor:pointer; font-size:12px;
+                     color:var(--text-light); padding:2px 4px; transition:color .2s; }
+    .copy-link-btn:hover { color:var(--blue); }
+
+    /* ── 최소 입찰 수량 뱃지 ── */
+    .min-qty-badge { display:inline-block; font-size:10.5px; font-weight:700;
+                     background:#fef3c7; color:#92400e; border:1px solid #fde68a;
+                     border-radius:4px; padding:2px 7px; margin-bottom:6px; }
+
+    /* ── 내 입찰 현황 모달 ── */
+    .my-bids-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55);
+                       z-index:3000; display:none; align-items:center; justify-content:center; }
+    .my-bids-overlay.open { display:flex; }
+    .my-bids-box { background:#fff; border-radius:16px; width:min(780px,96vw);
+                   max-height:85vh; overflow:hidden; display:flex; flex-direction:column;
+                   box-shadow:0 24px 48px rgba(0,0,0,.22); }
+    .my-bids-head { padding:1.25rem 1.5rem; border-bottom:1px solid var(--border);
+                    display:flex; align-items:center; justify-content:space-between; background:var(--navy); color:#fff; border-radius:16px 16px 0 0; }
+    .my-bids-head h3 { font-size:15px; font-weight:800; margin:0; }
+    .my-bids-body { padding:1.5rem; overflow-y:auto; flex:1; }
+    .my-bids-search { display:flex; gap:10px; margin-bottom:1.25rem; }
+    .my-bids-search input { flex:1; border:1.5px solid var(--border); border-radius:8px;
+                            padding:10px 14px; font-size:14px; outline:none; }
+    .my-bids-search input:focus { border-color:var(--blue); }
+    .my-bids-search button { padding:10px 20px; background:var(--red); color:#fff;
+                              border:none; border-radius:8px; font-weight:700; cursor:pointer; }
+    .bid-status-badge { display:inline-block; font-size:11px; font-weight:700;
+                        padding:3px 10px; border-radius:20px; }
+    .status-review  { background:#fef3c7; color:#92400e; }
+    .status-win     { background:#d1fae5; color:#065f46; }
+    .status-lose    { background:#fee2e2; color:#991b1b; }
+
+    /* ── 알림 신청 모달 ── */
+    .sub-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55);
+                   z-index:3000; display:none; align-items:center; justify-content:center; }
+    .sub-overlay.open { display:flex; }
+    .sub-box { background:#fff; border-radius:16px; width:min(440px,94vw);
+               box-shadow:0 24px 48px rgba(0,0,0,.22); overflow:hidden; }
+    .sub-head { padding:1.25rem 1.5rem; background:var(--navy); color:#fff;
+                display:flex; align-items:center; justify-content:space-between; }
+    .sub-head h3 { font-size:15px; font-weight:800; margin:0; }
+    .sub-body { padding:1.5rem; }
+    .sub-body .form-group { margin-bottom:1rem; }
+
+    /* ── 관리자 구독자 목록 ── */
+    .sub-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+    .sub-table th { text-align:left; padding:8px 12px; background:#f8fafc;
+                    font-size:11.5px; font-weight:700; color:var(--text-mid);
+                    border-bottom:2px solid var(--border); }
+    .sub-table td { padding:10px 12px; border-bottom:1px solid var(--border); }
+
+    /* ── 카드 상단 액션 버튼 영역 ── */
+    .card-actions { display:flex; align-items:center; gap:4px; }
+    </style>
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase_init.js"></script>
@@ -1018,7 +1080,12 @@
             장비팀 직통 &nbsp;|&nbsp; <strong style="color:var(--red)">container@sinokor.co.kr</strong>
         </div>
         <span class="nav-badge"><span class="live-dot"></span>LIVE</span>
-        <span class="nav-badge green"><i class="fas fa-check-circle" style="font-size:10px"></i>&nbsp;입찰 진행중</span>
+        <button class="btn-nav" style="background:rgba(244,63,94,.12);color:#f43f5e;border-color:rgba(244,63,94,.3);" onclick="openSubscribe()">
+            <i class="fas fa-bell"></i> 알림 신청
+        </button>
+        <button class="btn-nav" style="background:rgba(26,86,219,.12);color:var(--blue);border-color:rgba(26,86,219,.3);" onclick="openMyBids()">
+            <i class="fas fa-clipboard-list"></i> 내 입찰 확인
+        </button>
         <button class="btn-nav" onclick="openLogin()">
             <i class="fas fa-lock"></i> 판매자 관리
         </button>
@@ -1184,6 +1251,12 @@
                 <i class="fas fa-search"></i>
                 <input type="text" id="search-input" placeholder="항구·LOT ID·타입 검색..."
                        oninput="applyAll()" autocomplete="off">
+            </div>
+            <div class="filter-section" style="padding-bottom:8px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dark);">
+                    <input type="checkbox" id="fav-only" onchange="applyAll()" style="width:16px;height:16px;accent-color:#f43f5e;">
+                    <span>♡ 찜한 LOT만 보기</span>
+                </label>
             </div>
             <div class="filter-section">
                 <h4>지역</h4>
@@ -1428,9 +1501,15 @@
                                 <input type="date" class="form-input" id="n-deadline" required>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">비고 / 특이사항</label>
-                            <textarea class="form-textarea" id="n-note" placeholder="수리이력, 인도조건, 특이사항 등" style="min-height:68px;"></textarea>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">최소 입찰 수량 (Units)</label>
+                                <input type="number" class="form-input" id="n-minqty" placeholder="비워두면 1Unit" min="1">
+                            </div>
+                            <div class="form-group" style="flex:2;">
+                                <label class="form-label">비고 / 특이사항</label>
+                                <textarea class="form-textarea" id="n-note" placeholder="수리이력, 인도조건, 특이사항 등" style="min-height:40px;"></textarea>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary" style="width:100%;">
                             <i class="fas fa-plus"></i> LOT 등록
@@ -1613,6 +1692,62 @@
 </div>
 
 <!-- ════════════════════════════════════════
+     내 입찰 현황 모달
+════════════════════════════════════════ -->
+<div class="my-bids-overlay" id="my-bids-ov">
+    <div class="my-bids-box">
+        <div class="my-bids-head">
+            <h3><i class="fas fa-clipboard-list" style="margin-right:8px;"></i>내 입찰 현황</h3>
+            <button onclick="closeMyBids()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="my-bids-body">
+            <div class="my-bids-search">
+                <input type="text" id="my-company-input" placeholder="회사명을 입력하세요 (예: 극동MES)" onkeypress="if(event.key==='Enter') searchMyBids()">
+                <button onclick="searchMyBids()"><i class="fas fa-search"></i> 조회</button>
+            </div>
+            <div id="my-bids-result" style="color:var(--text-light);font-size:13px;text-align:center;padding:2rem 0;">
+                회사명을 입력하고 조회 버튼을 눌러주세요.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     알림 신청 모달
+════════════════════════════════════════ -->
+<div class="sub-overlay" id="sub-ov">
+    <div class="sub-box">
+        <div class="sub-head">
+            <h3><i class="fas fa-bell" style="margin-right:8px;color:#fbbf24;"></i>신규 LOT 알림 신청</h3>
+            <button onclick="closeSubscribe()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="sub-body">
+            <p style="font-size:13px;color:var(--text-mid);margin-bottom:1.25rem;">
+                새 매각 LOT가 등록되면 이메일로 알림을 받을 수 있습니다.
+            </p>
+            <div class="form-group">
+                <label class="form-label">회사명 <span class="req">*</span></label>
+                <input type="text" class="form-input" id="sub-company" placeholder="예: 극동MES">
+            </div>
+            <div class="form-group">
+                <label class="form-label">담당자명 <span class="req">*</span></label>
+                <input type="text" class="form-input" id="sub-name" placeholder="홍길동">
+            </div>
+            <div class="form-group">
+                <label class="form-label">이메일 <span class="req">*</span></label>
+                <input type="email" class="form-input" id="sub-email" placeholder="example@company.com">
+            </div>
+            <div style="display:flex;gap:10px;margin-top:1.25rem;">
+                <button class="btn btn-ghost" style="flex:1;" onclick="closeSubscribe()">취소</button>
+                <button class="btn btn-primary" style="flex:2;" onclick="submitSubscribe()">
+                    <i class="fas fa-bell"></i> 알림 신청하기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════
      JAVASCRIPT
 ════════════════════════════════════════ -->
 <script>
@@ -1680,6 +1815,7 @@ async function init() {
     await _loadAllBids();
     renderBuyer();
     renderSpecSection();
+    handleUrlHash();
 }
 
 // 모든 LOT의 입찰을 일괄 로드 (localStorage fallback 포함)
@@ -1764,8 +1900,10 @@ function applyAll() {
     const pmin  = num('pmin');
     const pmax  = num('pmax');
     const q     = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+    const favOnly = document.getElementById('fav-only')?.checked;
 
     let list = lots.filter(l => l.active);
+    if (favOnly) { const favs = getFavs(); list = list.filter(l => favs.includes(l.id)); }
     if (regs.length)  list = list.filter(l => regs.includes(l.region));
     if (types.length) list = list.filter(l => types.includes(l.type));
     if (conds.length) list = list.filter(l => conds.includes(l.condition));
@@ -1808,6 +1946,8 @@ function resetFilters() {
     document.getElementById('pmax').value='';
     const si = document.getElementById('search-input');
     if (si) si.value = '';
+    const fo = document.getElementById('fav-only');
+    if (fo) fo.checked = false;
     applyAll();
 }
 
@@ -1829,6 +1969,8 @@ function renderCard(lot) {
     const bidBadge = bidCnt > 0
         ? `<span class="bid-count-badge"><i class="fas fa-fire"></i> ${bidCnt}개 업체 입찰 접수</span>`
         : `<span class="bid-count-badge none"><i class="fas fa-inbox"></i> 입찰 대기중</span>`;
+    const isFav = getFavs().includes(lot.id);
+    const minQty = lot.min_qty && lot.min_qty > 1 ? lot.min_qty : null;
 
     return `
     <div class="container-card ${typeClass}" id="card-${lot.id}">
@@ -1838,13 +1980,22 @@ function renderCard(lot) {
                        onchange="toggleSel('${lot.id}',this)" title="선택">
                 <div class="card-type ${typeBadgeCls}">${lot.type}</div>
             </div>
-            <span class="cond-badge ${cCls}">${lot.condition}</span>
+            <div class="card-actions">
+                <button class="copy-link-btn" onclick="copyLotLink('${lot.id}')" title="링크 복사">
+                    <i class="fas fa-link"></i>
+                </button>
+                <button class="fav-btn ${isFav?'active':''}" onclick="toggleFav('${lot.id}',this)" title="${isFav?'찜 해제':'찜하기'}">
+                    ${isFav?'♥':'♡'}
+                </button>
+                <span class="cond-badge ${cCls}">${lot.condition}</span>
+            </div>
         </div>
         <div class="card-location">
             <i class="fas fa-map-marker-alt"></i>
             <strong>${lot.region}</strong> · ${lot.port}
             <span class="lot-id">${lot.id}</span>
         </div>
+        ${minQty ? `<div class="min-qty-badge"><i class="fas fa-layer-group" style="margin-right:4px;"></i>최소 ${minQty.toLocaleString()}U 이상 입찰</div>` : ''}
         <div class="card-specs">
             <div>
                 <div class="spec-lbl">수량</div>
@@ -2092,6 +2243,9 @@ ${co}  ${nm}  드림`;
             alert('희망 수량과 입찰 단가를 입력해주세요.'); return;
         }
         const lot = bidLot;
+        if (lot.min_qty && lot.min_qty > 1 && Number(qty) < lot.min_qty) {
+            alert(`최소 입찰 수량은 ${lot.min_qty.toLocaleString()} Units 이상입니다.`); return;
+        }
         const total = (Number(pr)*Number(qty)).toLocaleString();
 
         subject = `[DP매각 입찰] ${co} — ${lot.port} ${lot.type} ${qty}Units`;
@@ -2446,6 +2600,7 @@ async function addLot(e) {
         year: v('n-year'), condition: v('n-cond'),
         price: v('n-price') ? Number(v('n-price')) : null,
         deadline: v('n-deadline'), note: v('n-note'),
+        min_qty: v('n-minqty') ? Number(v('n-minqty')) : 1,
         active: true, created: new Date().toISOString().slice(0,10)
     };
     lots.push(lot);
@@ -2462,6 +2617,130 @@ function v(id)       { return document.getElementById(id)?.value.trim()||''; }
 function num(id)     { const n=Number(document.getElementById(id)?.value); return isNaN(n)||n===0?null:n; }
 function checked(cls){ return [...document.querySelectorAll(`.${cls}:checked`)].map(c=>c.value); }
 function goTo(id){ document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
+
+/* ── 찜하기 (Favorites) ── */
+function getFavs() {
+    try { return JSON.parse(localStorage.getItem('dp_favs') || '[]'); } catch { return []; }
+}
+function saveFavs(arr) { localStorage.setItem('dp_favs', JSON.stringify(arr)); }
+
+function toggleFav(id, btn) {
+    let favs = getFavs();
+    if (favs.includes(id)) {
+        favs = favs.filter(f => f !== id);
+        btn.classList.remove('active');
+        btn.textContent = '♡';
+        btn.title = '찜하기';
+    } else {
+        favs.push(id);
+        btn.classList.add('active');
+        btn.textContent = '♥';
+        btn.title = '찜 해제';
+    }
+    saveFavs(favs);
+}
+
+/* ── LOT 공유 링크 복사 ── */
+function copyLotLink(id) {
+    const url = `${location.origin}${location.pathname}#${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+        alert(`✅ 링크가 복사되었습니다!\n${url}`);
+    }).catch(() => {
+        prompt('아래 링크를 복사하세요:', url);
+    });
+}
+
+/* ── URL Hash → LOT 하이라이트 ── */
+function handleUrlHash() {
+    const hash = location.hash.replace('#', '');
+    if (!hash) return;
+    setTimeout(() => {
+        const card = document.getElementById('card-' + hash);
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.style.outline = '3px solid var(--red)';
+            card.style.transition = 'outline 0.5s';
+            setTimeout(() => { card.style.outline = ''; }, 3000);
+        }
+    }, 600);
+}
+
+/* ── 내 입찰 현황 모달 ── */
+function openMyBids() {
+    document.getElementById('my-bids-ov').classList.add('open');
+}
+function closeMyBids() {
+    document.getElementById('my-bids-ov').classList.remove('open');
+}
+async function searchMyBids() {
+    const company = document.getElementById('my-company-input').value.trim();
+    if (!company) { alert('회사명을 입력해주세요.'); return; }
+    const res = document.getElementById('my-bids-result');
+    res.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-mid);"><i class="fas fa-spinner fa-spin"></i> 조회 중...</div>';
+    const { data } = await sbLoadBidsByCompany(company);
+    if (!data || !data.length) {
+        res.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-mid);">
+            <i class="fas fa-inbox" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
+            "<strong>${company}</strong>" 으로 접수된 입찰 내역이 없습니다.
+        </div>`;
+        return;
+    }
+    const statusMap = { '검토중':'status-review', '낙찰':'status-win', '미낙찰':'status-lose' };
+    const rows = data.map(b => {
+        const st = b.status || '검토중';
+        return `<tr>
+            <td style="font-size:11px;">${b.created||'—'}</td>
+            <td><strong>${b.port||'—'}</strong></td>
+            <td><strong>${b.type||'—'}</strong></td>
+            <td>${b.qty ? b.qty.toLocaleString()+' U' : '—'}</td>
+            <td>${b.price ? 'USD '+b.price.toLocaleString() : '—'}</td>
+            <td>${b.inco||'—'}</td>
+            <td><span class="bid-status-badge ${statusMap[st]||'status-review'}">${st}</span></td>
+        </tr>`;
+    }).join('');
+    res.innerHTML = `
+        <div style="font-size:13px;color:var(--text-mid);margin-bottom:10px;"><strong>${company}</strong> — 총 ${data.length}건</div>
+        <div class="tbl-wrap">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+            <thead><tr style="background:#f8fafc;">
+                <th style="padding:8px 12px;text-align:left;font-size:11.5px;font-weight:700;color:var(--text-mid);border-bottom:2px solid var(--border);">접수일</th>
+                <th style="padding:8px 12px;text-align:left;font-size:11.5px;font-weight:700;color:var(--text-mid);border-bottom:2px solid var(--border);">항구</th>
+                <th style="padding:8px 12px;text-align:left;font-size:11.5px;font-weight:700;color:var(--text-mid);border-bottom:2px solid var(--border);">타입</th>
+                <th style="padding:8px 12px;text-align:left;font-size:11.5px;font-weight:700;color:var(--text-mid);border-bottom:2px solid var(--border);">수량</th>
+                <th style="padding:8px 12px;text-align:left;font-size:11.5px;font-weight:700;color:var(--text-mid);border-bottom:2px solid var(--border);">단가</th>
+                <th style="padding:8px 12px;text-align:left;font-size:11.5px;font-weight:700;color:var(--text-mid);border-bottom:2px solid var(--border);">인도조건</th>
+                <th style="padding:8px 12px;text-align:left;font-size:11.5px;font-weight:700;color:var(--text-mid);border-bottom:2px solid var(--border);">상태</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table></div>
+        <p style="font-size:11.5px;color:var(--text-light);margin-top:12px;">
+            <i class="fas fa-info-circle"></i> 낙찰/미낙찰 결과는 담당자 검토 후 업데이트됩니다.
+        </p>`;
+}
+
+/* ── 알림 신청 모달 ── */
+function openSubscribe() {
+    document.getElementById('sub-ov').classList.add('open');
+}
+function closeSubscribe() {
+    document.getElementById('sub-ov').classList.remove('open');
+}
+async function submitSubscribe() {
+    const company = v('sub-company'), name = v('sub-name'), email = v('sub-email');
+    if (!company || !name || !email) { alert('모든 항목을 입력해주세요.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('올바른 이메일 형식을 입력해주세요.'); return; }
+    const sub = {
+        id: 'SUB' + Date.now(),
+        company, name, email,
+        created: new Date().toISOString().slice(0, 10)
+    };
+    await sbSaveSubscriber(sub);
+    alert(`✅ 알림 신청이 완료되었습니다!\n새 LOT 등록 시 ${email}로 안내 드립니다.`);
+    closeSubscribe();
+    document.getElementById('sub-company').value = '';
+    document.getElementById('sub-name').value = '';
+    document.getElementById('sub-email').value = '';
+}
 
 /* ── CONTAINER SPECS (장금상선 공식 기준) ── */
 const SPECS = {
