@@ -1015,7 +1015,7 @@
     <div class="nav-right">
         <div class="nav-contact">
             <i class="fas fa-headset"></i>
-            장비팀 직통 &nbsp;|&nbsp; <strong style="color:rgba(255,255,255,0.7)">container@sinokor.co.kr</strong>
+            장비팀 직통 &nbsp;|&nbsp; <strong style="color:var(--red)">container@sinokor.co.kr</strong>
         </div>
         <span class="nav-badge"><span class="live-dot"></span>LIVE</span>
         <span class="nav-badge green"><i class="fas fa-check-circle" style="font-size:10px"></i>&nbsp;입찰 진행중</span>
@@ -2102,7 +2102,6 @@ ${co}  ${nm}  드림`;
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [입찰 LOT 정보]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-LOT 번호    : ${lot.id}
 지역 / 항구  : ${lot.region} / ${lot.port}
 컨테이너     : ${lot.type}  (${TYPE_NAME[lot.type]||''})
 상태 등급    : ${lot.condition}
@@ -2271,6 +2270,7 @@ function renderSummary() {
             <td>${maxP ? 'USD '+maxP.toLocaleString() : '<span style="color:var(--text-light)">—</span>'}</td>
             <td>${minP && maxP && minP !== maxP ? 'USD '+minP.toLocaleString() : '<span style="color:var(--text-light)">—</span>'}</td>
             <td>${ratioBadge}</td>
+            <td style="font-size:12px;color:var(--text-mid);">${lot.deadline||'—'}</td>
         </tr>`;
     }).join('');
     container.innerHTML = `
@@ -2278,7 +2278,7 @@ function renderSummary() {
         <table class="summary-table">
             <thead><tr>
                 <th>LOT</th><th>항구</th><th>타입</th><th>희망단가</th>
-                <th>입찰건수</th><th>입찰 업체</th><th>최고 입찰가</th><th>최저 입찰가</th><th>달성률</th>
+                <th>입찰건수</th><th>입찰 업체</th><th>최고 입찰가</th><th>최저 입찰가</th><th>달성률</th><th>마감일</th>
             </tr></thead>
             <tbody>${rows}</tbody>
         </table>
@@ -2286,7 +2286,8 @@ function renderSummary() {
 }
 
 function renderLots() {
-    const show = tabState==='active' ? lots.filter(l=>l.active) : lots;
+    const show = (tabState==='active' ? lots.filter(l=>l.active) : lots)
+        .slice().sort((a, b) => b.id.localeCompare(a.id));
     const tbody = document.getElementById('lots-body');
     if (!show.length) {
         tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-mid);">등록된 LOT가 없습니다</td></tr>`;
