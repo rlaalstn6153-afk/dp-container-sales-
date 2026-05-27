@@ -1881,11 +1881,20 @@ async function init() {
     handleUrlHash();
 }
 
-// 모든 LOT의 입찰을 일괄 로드 (localStorage fallback 포함)
+// 모든 입찰 로드 — Supabase 우선, localStorage 보완
 async function _loadAllBids() {
-    // localStorage에 이미 있는 입찰 데이터를 기본으로 사용
-    const stored = localStorage.getItem('dp_bids');
-    bids = stored ? JSON.parse(stored) : [];
+    const res = await sbLoadAllBids();
+    const localBids = JSON.parse(localStorage.getItem('dp_bids') || '[]');
+    if (res.ok) {
+        const merged = [...res.data];
+        for (const lb of localBids) {
+            if (!merged.find(b => b.id === lb.id)) merged.push(lb);
+        }
+        bids = merged;
+    } else {
+        bids = localBids;
+    }
+    localStorage.setItem('dp_bids', JSON.stringify(bids));
 }
 
 // 단일 LOT 저장 (upsert)
@@ -2419,11 +2428,20 @@ async function renderAdmin() {
     const lotsAllRes = await sbLoadAllLots();
     if (lotsAllRes.ok && lotsAllRes.data.length > 0) lots = lotsAllRes.data;
 
+    // Supabase + localStorage 병합 (Supabase 우선, 로컬 전용 항목 보완)
     const bidsAllRes = await sbLoadAllBids();
-    if (bidsAllRes.ok) {
-        bids = bidsAllRes.data;
-        localStorage.setItem('dp_bids', JSON.stringify(bids));
+    const localBids  = JSON.parse(localStorage.getItem('dp_bids') || '[]');
+    const sbBids     = (bidsAllRes.ok ? bidsAllRes.data : []);
+    const merged     = [...sbBids];
+    for (const lb of localBids) {
+        if (!merged.find(b => b.id === lb.id)) {
+            merged.push(lb);
+            // localStorage에만 있는 입찰을 Supabase로 업로드
+            sbSubmitBid(lb);
+        }
     }
+    bids = merged;
+    localStorage.setItem('dp_bids', JSON.stringify(bids));
 
     // Realtime 구독: 새 입찰 실시간 감지 (전체 dp_bids 채널)
     if (_realtimeSub) { _realtimeSub.unsubscribe(); _realtimeSub = null; }
