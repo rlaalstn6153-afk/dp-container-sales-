@@ -1600,6 +1600,7 @@
                                     <th>접수일</th><th>회사명</th><th>담당자</th>
                                     <th>LOT</th><th>타입</th><th>수량</th>
                                     <th>입찰단가</th><th>총액(USD)</th><th>연락처</th>
+                                    <th>조회코드</th><th>상태</th>
                                 </tr>
                             </thead>
                             <tbody id="bids-body"></tbody>
@@ -2554,18 +2555,44 @@ function renderBids() {
         tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-mid);">접수된 입찰이 없습니다</td></tr>`;
         return;
     }
-    tbody.innerHTML = [...bids].reverse().map(b=>`
-        <tr>
+    const statusMap = { '검토중':'status-review', '낙찰':'status-win', '미낙찰':'status-lose' };
+    tbody.innerHTML = [...bids].reverse().map(b=>{
+        const st = b.status || '검토중';
+        return `<tr>
             <td style="font-size:11px;">${b.created}</td>
             <td><strong>${b.company}</strong></td>
             <td>${b.name}</td>
-            <td>${b.port}</td>
+            <td style="font-size:11px;">${b.port}</td>
             <td><strong>${b.type}</strong></td>
-            <td>${b.qty.toLocaleString()}</td>
-            <td>USD ${b.price.toLocaleString()}</td>
-            <td>USD ${(b.price*b.qty).toLocaleString()}</td>
-            <td style="font-size:11px;">${b.phone||b.email}</td>
-        </tr>`).join('');
+            <td>${(b.qty||0).toLocaleString()}</td>
+            <td>USD ${(b.price||0).toLocaleString()}</td>
+            <td>USD ${((b.price||0)*(b.qty||0)).toLocaleString()}</td>
+            <td style="font-size:11px;">${b.phone||b.email||'—'}</td>
+            <td style="font-family:monospace;font-size:11.5px;font-weight:700;color:var(--navy);">${b.code||'—'}</td>
+            <td>
+                <select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;cursor:pointer;"
+                        onchange="updateBidStatus('${b.id}',this.value)">
+                    <option value="검토중" ${st==='검토중'?'selected':''}>🕐 검토중</option>
+                    <option value="낙찰"   ${st==='낙찰'  ?'selected':''}>✅ 낙찰</option>
+                    <option value="미낙찰" ${st==='미낙찰'?'selected':''}>❌ 미낙찰</option>
+                </select>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function updateBidStatus(bidId, status) {
+    const bid = bids.find(b => b.id === bidId);
+    if (!bid) return;
+    bid.status = status;
+    // Supabase 업데이트
+    if (typeof _sb !== 'undefined' && _sb) {
+        try {
+            await _sb.from('dp_bids').update({ status }).eq('id', bidId);
+        } catch(e) { console.warn('상태 업데이트 실패', e); }
+    }
+    localStorage.setItem('dp_bids', JSON.stringify(bids));
+    renderSummary();
 }
 
 function switchTab(t) {
