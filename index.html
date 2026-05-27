@@ -1044,6 +1044,33 @@
     .sub-body { padding:1.5rem; }
     .sub-body .form-group { margin-bottom:1rem; }
 
+    /* ── 입찰 성공 코드 모달 ── */
+    .bid-success-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6);
+                           z-index:4000; display:none; align-items:center; justify-content:center; }
+    .bid-success-overlay.open { display:flex; }
+    .bid-success-box { background:#fff; border-radius:20px; width:min(420px,92vw);
+                       box-shadow:0 32px 64px rgba(0,0,0,.25); overflow:hidden; text-align:center; }
+    .bid-success-top { background:linear-gradient(135deg,#0A1628,#1a3260); padding:2rem 1.5rem 1.5rem; color:#fff; }
+    .bid-success-top .icon { font-size:2.5rem; margin-bottom:10px; }
+    .bid-success-top h3 { font-size:17px; font-weight:800; margin:0 0 4px; }
+    .bid-success-top p { font-size:12.5px; color:rgba(255,255,255,.7); margin:0; }
+    .bid-code-display { margin:1.5rem; background:#f8fafc; border:2px dashed #e2e8f0;
+                        border-radius:14px; padding:1.25rem; }
+    .bid-code-label { font-size:11px; color:var(--text-light); font-weight:700;
+                      text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+    .bid-code-value { font-size:28px; font-weight:900; color:var(--navy);
+                      letter-spacing:4px; font-family:monospace; }
+    .bid-code-copy { margin-top:10px; background:none; border:1.5px solid var(--border);
+                     border-radius:8px; padding:6px 16px; font-size:12px; cursor:pointer;
+                     color:var(--text-mid); transition:all .2s; }
+    .bid-code-copy:hover { border-color:var(--blue); color:var(--blue); }
+    .bid-code-warn { font-size:12px; color:var(--danger); background:#fef2f2;
+                     border-radius:8px; padding:10px 14px; margin:0 1.5rem 1.5rem;
+                     display:flex; align-items:center; gap:8px; text-align:left; }
+    .bid-success-btn { margin:0 1.5rem 1.5rem; width:calc(100% - 3rem);
+                       padding:12px; background:var(--red); color:#fff; border:none;
+                       border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
+
     /* ── 관리자 구독자 목록 ── */
     .sub-table { width:100%; border-collapse:collapse; font-size:12.5px; }
     .sub-table th { text-align:left; padding:8px 12px; background:#f8fafc;
@@ -1701,12 +1728,22 @@
             <button onclick="closeMyBids()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;"><i class="fas fa-times"></i></button>
         </div>
         <div class="my-bids-body">
+            <div style="background:#f8fafc;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.5rem;">🔑</span>
+                <div style="font-size:12.5px;color:var(--text-mid);">
+                    입찰 제출 후 발급된 <strong style="color:var(--navy);">조회 코드</strong>를 입력하세요.<br>
+                    본인의 입찰 내역만 확인할 수 있습니다.
+                </div>
+            </div>
             <div class="my-bids-search">
-                <input type="text" id="my-company-input" placeholder="회사명을 입력하세요 (예: 극동MES)" onkeypress="if(event.key==='Enter') searchMyBids()">
-                <button onclick="searchMyBids()"><i class="fas fa-search"></i> 조회</button>
+                <input type="text" id="my-code-input" placeholder="조회 코드 입력 (예: BID-K7X2M9)"
+                       style="text-transform:uppercase;letter-spacing:2px;font-family:monospace;font-size:15px;"
+                       onkeypress="if(event.key==='Enter') searchByCode()"
+                       oninput="this.value=this.value.toUpperCase()">
+                <button onclick="searchByCode()"><i class="fas fa-key"></i> 조회</button>
             </div>
             <div id="my-bids-result" style="color:var(--text-light);font-size:13px;text-align:center;padding:2rem 0;">
-                회사명을 입력하고 조회 버튼을 눌러주세요.
+                조회 코드를 입력하고 조회 버튼을 눌러주세요.
             </div>
         </div>
     </div>
@@ -1744,6 +1781,31 @@
                 </button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     입찰 성공 코드 모달
+════════════════════════════════════════ -->
+<div class="bid-success-overlay" id="bid-success-ov">
+    <div class="bid-success-box">
+        <div class="bid-success-top">
+            <div class="icon">🔑</div>
+            <h3>입찰 접수 완료!</h3>
+            <p>메일 프로그램에서 발송을 완료해주세요</p>
+        </div>
+        <div class="bid-code-display">
+            <div class="bid-code-label">나의 입찰 조회 코드</div>
+            <div class="bid-code-value" id="success-code-text">—</div>
+            <button class="bid-code-copy" onclick="copyBidCode()">
+                <i class="fas fa-copy"></i> 코드 복사
+            </button>
+        </div>
+        <div class="bid-code-warn">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>이 코드를 저장해두세요. 입찰 현황 조회 시 필요하며, 분실 시 재발급되지 않습니다.</span>
+        </div>
+        <button class="bid-success-btn" onclick="closeBidSuccess()">확인</button>
     </div>
 </div>
 
@@ -2224,17 +2286,27 @@ ${nt||'없음'}
 감사합니다.
 ${co}  ${nm}  드림`;
 
+        const batchCode = genBidCode();
         for (const r of rows) {
             const bid = {
                 id:'BID'+Date.now()+Math.random().toString(36).slice(2,5),
                 lotId:r.l.id, port:r.l.port, type:r.l.type,
                 company:co, name:nm, email:em, phone:ph,
                 qty:r.qty, price:r.price, inco:inc, take:td, note:nt,
+                code: batchCode,
+                status: '검토중',
                 created: new Date().toISOString().slice(0,10)
             };
             bids.push(bid);
-            sbSubmitBid(bid);  // Supabase 저장 (비동기, 실패 시 localStorage fallback 내장)
+            sbSubmitBid(bid);
         }
+        saveBids();
+        window.location.href =
+            `mailto:${SALES_MAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        closeBid();
+        clearSel();
+        showBidSuccess(batchCode);
+        return;
 
     /* ── 단건 입찰 ── */
     } else {
@@ -2247,6 +2319,7 @@ ${co}  ${nm}  드림`;
             alert(`최소 입찰 수량은 ${lot.min_qty.toLocaleString()} Units 이상입니다.`); return;
         }
         const total = (Number(pr)*Number(qty)).toLocaleString();
+        const bidCode = genBidCode();
 
         subject = `[DP매각 입찰] ${co} — ${lot.port} ${lot.type} ${qty}Units`;
         body = `안녕하세요, 장금상선·흥아라인 장비팀 귀중.
@@ -2291,18 +2364,19 @@ ${co}  ${nm}  드림`;
             id:'BID'+Date.now(), lotId:lot.id, port:lot.port, type:lot.type,
             company:co, name:nm, email:em, phone:ph,
             qty:Number(qty), price:Number(pr), inco:inc, take:td, note:nt,
+            code: bidCode,
+            status: '검토중',
             created: new Date().toISOString().slice(0,10)
         };
         bids.push(bid);
-        sbSubmitBid(bid);  // Supabase 저장 (비동기, 실패 시 localStorage fallback 내장)
+        sbSubmitBid(bid);
+        saveBids();
+        window.location.href =
+            `mailto:${SALES_MAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        closeBid();
+        clearSel();
+        showBidSuccess(bidCode);
     }
-
-    saveBids();  // localStorage 백업
-    window.location.href =
-        `mailto:${SALES_MAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    closeBid();
-    clearSel();
-    alert(`입찰 의뢰가 접수되었습니다!\n메일 프로그램이 열리면 내용 확인 후 발송해주세요.\n담당팀이 검토 후 연락드립니다.`);
 }
 
 /* ── ADMIN ── */
@@ -2617,6 +2691,81 @@ function v(id)       { return document.getElementById(id)?.value.trim()||''; }
 function num(id)     { const n=Number(document.getElementById(id)?.value); return isNaN(n)||n===0?null:n; }
 function checked(cls){ return [...document.querySelectorAll(`.${cls}:checked`)].map(c=>c.value); }
 function goTo(id){ document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
+
+/* ── 입찰 코드 발급 ── */
+function genBidCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 혼동 문자 제외(0,O,I,1)
+    let code = 'BID-';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+}
+
+/* ── 입찰 성공 모달 ── */
+let _lastBidCode = '';
+function showBidSuccess(code) {
+    _lastBidCode = code;
+    document.getElementById('success-code-text').textContent = code;
+    document.getElementById('bid-success-ov').classList.add('open');
+}
+function closeBidSuccess() {
+    document.getElementById('bid-success-ov').classList.remove('open');
+}
+function copyBidCode() {
+    navigator.clipboard.writeText(_lastBidCode).then(() => {
+        const btn = document.querySelector('.bid-code-copy');
+        btn.innerHTML = '<i class="fas fa-check"></i> 복사됨!';
+        btn.style.color = 'var(--success)';
+        btn.style.borderColor = 'var(--success)';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-copy"></i> 코드 복사';
+            btn.style.color = '';
+            btn.style.borderColor = '';
+        }, 2000);
+    });
+}
+
+/* ── 코드로 입찰 조회 ── */
+async function searchByCode() {
+    const code = (document.getElementById('my-code-input')?.value || '').trim().toUpperCase();
+    if (!code) { alert('조회 코드를 입력해주세요.'); return; }
+    if (!code.startsWith('BID-')) { alert('코드 형식이 올바르지 않습니다.\n예: BID-K7X2M9'); return; }
+    const res = document.getElementById('my-bids-result');
+    res.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-mid);"><i class="fas fa-spinner fa-spin"></i> 조회 중...</div>';
+    const { data } = await sbLoadBidByCode(code);
+    if (!data) {
+        res.innerHTML = `<div style="text-align:center;padding:2rem;">
+            <div style="font-size:2rem;margin-bottom:10px;">🔍</div>
+            <div style="font-weight:700;color:var(--text-dark);margin-bottom:6px;">입찰 내역을 찾을 수 없습니다</div>
+            <div style="font-size:12.5px;color:var(--text-light);">코드를 다시 확인해주세요.</div>
+        </div>`;
+        return;
+    }
+    const statusMap = { '검토중':'status-review', '낙찰':'status-win', '미낙찰':'status-lose' };
+    const st = data.status || '검토중';
+    const lotInfo = lots.find(l => l.id === data.lotId);
+    res.innerHTML = `
+        <div style="border:1.5px solid var(--border);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-weight:800;font-size:14px;"><i class="fas fa-file-invoice" style="margin-right:6px;"></i>입찰 내역</span>
+                <span class="bid-status-badge ${statusMap[st]||'status-review'}">${st}</span>
+            </div>
+            <div style="padding:1.25rem;">
+                <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                    <tr><td style="padding:6px 0;color:var(--text-light);width:35%;">접수일</td><td style="font-weight:600;">${data.created || '—'}</td></tr>
+                    <tr><td style="padding:6px 0;color:var(--text-light);">항구 / 타입</td><td style="font-weight:600;">${data.port || '—'} / ${data.type || '—'}</td></tr>
+                    ${lotInfo ? `<tr><td style="padding:6px 0;color:var(--text-light);">LOT 마감일</td><td style="font-weight:600;">${lotInfo.deadline}</td></tr>` : ''}
+                    <tr><td style="padding:6px 0;color:var(--text-light);">입찰 수량</td><td style="font-weight:600;">${data.qty ? data.qty.toLocaleString()+' Units' : '—'}</td></tr>
+                    <tr><td style="padding:6px 0;color:var(--text-light);">입찰 단가</td><td style="font-weight:600;">${data.price ? 'USD '+data.price.toLocaleString() : '—'}</td></tr>
+                    <tr><td style="padding:6px 0;color:var(--text-light);">인도 조건</td><td style="font-weight:600;">${data.inco || '—'}</td></tr>
+                    <tr><td style="padding:6px 0;color:var(--text-light);">회사명</td><td style="font-weight:600;">${data.company}</td></tr>
+                    <tr><td style="padding:6px 0;color:var(--text-light);">담당자</td><td style="font-weight:600;">${data.name}</td></tr>
+                </table>
+            </div>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-light);margin-top:12px;text-align:center;">
+            <i class="fas fa-info-circle"></i> 낙찰/미낙찰 결과는 담당자 검토 후 업데이트됩니다.
+        </p>`;
+}
 
 /* ── 찜하기 (Favorites) ── */
 function getFavs() {

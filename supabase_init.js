@@ -128,6 +128,8 @@ function _bidToRow(bid) {
     inco:     bid.inco    || null,
     take:     bid.take    || null,
     note:     bid.note    || null,
+    code:     bid.code    || null,
+    status:   bid.status  || '검토중',
     created:  bid.created || new Date().toISOString().slice(0, 10),
   };
 }
@@ -147,6 +149,8 @@ function _bidFromRow(row) {
     inco:    row.inco,
     take:    row.take,
     note:    row.note,
+    code:    row.code,
+    status:  row.status || '검토중',
     created: row.created,
   };
 }
@@ -481,7 +485,34 @@ function sbSubscribeAllBids(callback) {
 }
 
 /**
- * 회사명으로 입찰 조회 — 구매자 "내 입찰 현황"
+ * 입찰 코드로 단건 조회 — 구매자 "내 입찰 현황"
+ * @param {string} code  - 예: 'BID-K7X2M9'
+ * @returns {Promise<{ok:boolean, data:object|null, error?:any}>}
+ */
+async function sbLoadBidByCode(code) {
+  if (!_sbAvailable) {
+    const all = _lsLoadBids();
+    const found = all.find(b => b.code === code) || null;
+    return { ok: true, data: found };
+  }
+  try {
+    const { data, error } = await _sb
+      .from('dp_bids')
+      .select('*')
+      .eq('code', code)
+      .maybeSingle();
+    if (error) throw error;
+    return { ok: true, data: data ? _bidFromRow(data) : null };
+  } catch (e) {
+    console.error('[sbLoadBidByCode] Supabase 오류 → localStorage fallback', e);
+    const all = _lsLoadBids();
+    const found = all.find(b => b.code === code) || null;
+    return { ok: false, data: found, error: e };
+  }
+}
+
+/**
+ * 회사명으로 입찰 조회 — 구매자 "내 입찰 현황" (레거시, 코드 방식으로 대체됨)
  * @param {string} company
  * @returns {Promise<{ok:boolean, data:object[], error?:any}>}
  */
