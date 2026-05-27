@@ -992,6 +992,9 @@
             .hero-legend { gap: 6px; }
         }
     </style>
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase_init.js"></script>
 </head>
 <body>
 
@@ -1653,18 +1656,50 @@ let lots  = [];
 let bids  = [];
 let tabState = 'active';  // admin tab
 let bidLot   = null;
+let _realtimeSub = null;  // Realtime 구독 핸들
 
-function init() {
-    const s = localStorage.getItem('dp_lots');
-    lots = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULTS));
-    const b = localStorage.getItem('dp_bids');
-    bids = b ? JSON.parse(b) : [];
-    if (!s) save();
+async function init() {
+    // Supabase에서 LOT 로드 (실패 시 localStorage → DEFAULTS 순으로 fallback)
+    const lotsRes = await sbLoadLots();
+    if (lotsRes.ok && lotsRes.data.length > 0) {
+        lots = lotsRes.data;
+    } else {
+        // Supabase 미연결 또는 빈 DB: localStorage → DEFAULTS
+        const stored = localStorage.getItem('dp_lots');
+        if (stored) {
+            lots = JSON.parse(stored);
+        } else {
+            lots = JSON.parse(JSON.stringify(DEFAULTS));
+            // DEFAULTS를 Supabase에 초기 저장
+            for (const lot of lots) {
+                await sbSaveLot(lot);
+            }
+        }
+    }
+    // 모든 LOT의 입찰 로드 (관리자 화면용 캐시)
+    await _loadAllBids();
     renderBuyer();
     renderSpecSection();
 }
 
-function save()    { localStorage.setItem('dp_lots', JSON.stringify(lots)); }
+// 모든 LOT의 입찰을 일괄 로드 (localStorage fallback 포함)
+async function _loadAllBids() {
+    // localStorage에 이미 있는 입찰 데이터를 기본으로 사용
+    const stored = localStorage.getItem('dp_bids');
+    bids = stored ? JSON.parse(stored) : [];
+}
+
+// 단일 LOT 저장 (upsert)
+async function save(lot) {
+    if (lot) {
+        await sbSaveLot(lot);
+    } else {
+        // lots 배열 전체를 localStorage에도 동기화 (fallback)
+        localStorage.setItem('dp_lots', JSON.stringify(lots));
+    }
+}
+
+// 입찰 저장은 submitBid() 내에서 sbSubmitBid() 직접 호출
 function saveBids(){ localStorage.setItem('dp_bids', JSON.stringify(bids)); }
 
 /* ── BUYER ── */
@@ -2038,15 +2073,17 @@ ${nt||'없음'}
 감사합니다.
 ${co}  ${nm}  드림`;
 
-        rows.forEach(r => {
-            bids.push({
+        for (const r of rows) {
+            const bid = {
                 id:'BID'+Date.now()+Math.random().toString(36).slice(2,5),
                 lotId:r.l.id, port:r.l.port, type:r.l.type,
                 company:co, name:nm, email:em, phone:ph,
                 qty:r.qty, price:r.price, inco:inc, take:td, note:nt,
                 created: new Date().toISOString().slice(0,10)
-            });
-        });
+            };
+            bids.push(bid);
+            sbSubmitBid(bid);  // Supabase 저장 (비동기, 실패 시 localStorage fallback 내장)
+        }
 
     /* ── 단건 입찰 ── */
     } else {
@@ -2097,15 +2134,17 @@ ${nt||'없음'}
 감사합니다.
 ${co}  ${nm}  드림`;
 
-        bids.push({
+        const bid = {
             id:'BID'+Date.now(), lotId:lot.id, port:lot.port, type:lot.type,
             company:co, name:nm, email:em, phone:ph,
             qty:Number(qty), price:Number(pr), inco:inc, take:td, note:nt,
             created: new Date().toISOString().slice(0,10)
-        });
+        };
+        bids.push(bid);
+        sbSubmitBid(bid);  // Supabase 저장 (비동기, 실패 시 localStorage fallback 내장)
     }
 
-    saveBids();
+    saveBids();  // localStorage 백업
     window.location.href =
         `mailto:${SALES_MAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     closeBid();
@@ -2134,20 +2173,51 @@ function doLogin() {
     }
 }
 function adminLogout() {
+    // Realtime 구독 해제
+    if (_realtimeSub) { _realtimeSub.unsubscribe(); _realtimeSub = null; }
     document.getElementById('admin-panel').style.display='none';
     document.getElementById('buyer-portal').style.display='block';
 }
 function goBuyer() {
+    // Realtime 구독 해제
+    if (_realtimeSub) { _realtimeSub.unsubscribe(); _realtimeSub = null; }
     document.getElementById('admin-panel').style.display='none';
     document.getElementById('buyer-portal').style.display='block';
     renderBuyer();
 }
 
-function renderAdmin() {
+async function renderAdmin() {
+    // 관리자 진입 시 전체 LOT + 입찰 재로드
+    const lotsAllRes = await sbLoadAllLots();
+    if (lotsAllRes.ok && lotsAllRes.data.length > 0) lots = lotsAllRes.data;
+
+    const bidsAllRes = await sbLoadAllBids();
+    if (bidsAllRes.ok) {
+        bids = bidsAllRes.data;
+        localStorage.setItem('dp_bids', JSON.stringify(bids));
+    }
+
+    // Realtime 구독: 새 입찰 실시간 감지 (전체 dp_bids 채널)
+    if (_realtimeSub) { _realtimeSub.unsubscribe(); _realtimeSub = null; }
+    _realtimeSub = sbSubscribeAllBids((newBid) => {
+        if (!bids.find(b => b.id === newBid.id)) {
+            bids.unshift(newBid);
+            renderSummary();
+            renderBids();
+            renderAdmin_KPI();
+        }
+    });
+
+    renderAdmin_KPI();
+    renderLots();
+    renderSummary();
+    renderBids();
+}
+
+function renderAdmin_KPI() {
     const active = lots.filter(l=>l.active);
     const units  = active.reduce((s,l)=>s+l.qty,0);
     const tv     = active.filter(l=>l.price).reduce((s,l)=>s+l.price*l.qty,0);
-
     document.getElementById('kpi').innerHTML = `
         <div class="kpi-card"><div class="kpi-icon blue"><i class="fas fa-boxes"></i></div>
             <div><div class="kpi-val">${active.length}</div><div class="kpi-lbl">활성 LOT</div></div></div>
@@ -2158,9 +2228,6 @@ function renderAdmin() {
         <div class="kpi-card"><div class="kpi-icon red"><i class="fas fa-dollar-sign"></i></div>
             <div><div class="kpi-val">${tv>0?'$'+(tv/1000).toFixed(0)+'K':'—'}</div><div class="kpi-lbl">희망가액(USD)</div></div></div>
     `;
-    renderLots();
-    renderSummary();
-    renderBids();
 }
 
 function renderSummary() {
@@ -2279,14 +2346,21 @@ function switchTab(t) {
     renderLots();
 }
 
-function toggleLot(id) {
+async function toggleLot(id) {
     const l = lots.find(x=>x.id===id);
-    if (l) { l.active=!l.active; save(); renderAdmin(); }
+    if (l) {
+        l.active=!l.active;
+        await sbSaveLot(l);
+        localStorage.setItem('dp_lots', JSON.stringify(lots));
+        renderAdmin();
+    }
 }
-function delLot(id) {
+async function delLot(id) {
     if (!confirm('이 LOT를 삭제하시겠습니까?')) return;
+    await sbDeleteLot(id);
     lots = lots.filter(x=>x.id!==id);
-    save(); renderAdmin();
+    localStorage.setItem('dp_lots', JSON.stringify(lots));
+    renderAdmin();
 }
 function printBids() {
     if (!bids.length) { alert('인쇄할 입찰 내역이 없습니다.'); return; }
@@ -2362,7 +2436,7 @@ function updatePorts() {
 }
 
 /* ── ADD LOT ── */
-function addLot(e) {
+async function addLot(e) {
     e.preventDefault();
     const lot = {
         id: 'LOT' + String(Date.now()).slice(-6),
@@ -2374,7 +2448,8 @@ function addLot(e) {
         active: true, created: new Date().toISOString().slice(0,10)
     };
     lots.push(lot);
-    save();
+    await sbSaveLot(lot);
+    localStorage.setItem('dp_lots', JSON.stringify(lots));
     e.target.reset();
     document.getElementById('n-port').innerHTML='<option value="">지역 먼저 선택</option>';
     renderAdmin();
