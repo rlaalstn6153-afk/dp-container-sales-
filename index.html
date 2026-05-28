@@ -1156,7 +1156,7 @@
                     <div class="hero-dash-item">
                         <div class="dash-icon"><i class="fas fa-layer-group"></i></div>
                         <div class="dash-val accent" id="dash-lots">—</div>
-                        <div class="dash-lbl">활성 LOT 수</div>
+                        <div class="dash-lbl">활성 건 수</div>
                     </div>
                     <div class="hero-dash-item">
                         <div class="dash-icon"><i class="fas fa-cubes"></i></div>
@@ -1276,13 +1276,13 @@
             </div>
             <div class="filter-search">
                 <i class="fas fa-search"></i>
-                <input type="text" id="search-input" placeholder="항구·LOT ID·타입 검색..."
+                <input type="text" id="search-input" placeholder="항구·번호·타입 검색..."
                        oninput="applyAll()" autocomplete="off">
             </div>
             <div class="filter-section" style="padding-bottom:8px;">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dark);">
                     <input type="checkbox" id="fav-only" onchange="applyAll()" style="width:16px;height:16px;accent-color:#f43f5e;">
-                    <span>♡ 찜한 LOT만 보기</span>
+                    <span>♡ 찜한 건만 보기</span>
                 </label>
             </div>
             <div class="filter-section">
@@ -1314,7 +1314,7 @@
         <div class="listings-area">
             <div class="listings-head">
                 <div class="listings-count">
-                    총 <strong id="cnt">0</strong>개 매각 LOT
+                    총 <strong id="cnt">0</strong>건 매각
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <button class="btn btn-sm" id="sel-all-btn"
@@ -1346,8 +1346,8 @@
             <div class="sel-info">
                 <i class="fas fa-check-square"></i>
                 <span class="sel-cnt-badge" id="sel-cnt">0</span>
-                개 LOT 선택됨
-                <span class="sel-hint">| 체크박스로 원하는 LOT를 선택하세요</span>
+                건 선택됨
+                <span class="sel-hint">| 체크박스로 원하는 건을 선택하세요</span>
             </div>
             <div style="display:flex; gap:8px;">
                 <button class="btn btn-ghost btn-sm" onclick="clearSel()">
@@ -1456,7 +1456,7 @@
             <!-- ADD FORM -->
             <div class="a-card">
                 <div class="a-card-head">
-                    <h3><i class="fas fa-plus-circle" style="color:var(--blue); margin-right:6px;"></i>매각 LOT 신규 등록</h3>
+                    <h3><i class="fas fa-plus-circle" style="color:var(--blue); margin-right:6px;"></i>신규 매각건 등록</h3>
                 </div>
                 <div class="a-card-body">
                     <form onsubmit="addLot(event)">
@@ -1539,7 +1539,7 @@
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary" style="width:100%;">
-                            <i class="fas fa-plus"></i> LOT 등록
+                            <i class="fas fa-plus"></i> 건 등록
                         </button>
                     </form>
                 </div>
@@ -1551,7 +1551,7 @@
                 <!-- LOTS TABLE -->
                 <div class="a-card">
                     <div class="a-card-head">
-                        <h3><i class="fas fa-list-alt" style="color:var(--blue); margin-right:6px;"></i>등록된 매각 LOT</h3>
+                        <h3><i class="fas fa-list-alt" style="color:var(--blue); margin-right:6px;"></i>등록된 매각건</h3>
                         <div class="tab-bar">
                             <button class="tab on" id="tab-active" onclick="switchTab('active')">활성만</button>
                             <button class="tab" id="tab-all" onclick="switchTab('all')">전체</button>
@@ -1561,7 +1561,7 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>LOT</th><th>항구</th><th>타입</th>
+                                    <th>번호</th><th>항구</th><th>타입</th>
                                     <th>수량</th><th>상태</th><th>단가(USD)</th>
                                     <th>마감일</th><th>관리</th>
                                 </tr>
@@ -1574,7 +1574,7 @@
                 <!-- BID SUMMARY -->
                 <div class="a-card" id="summary-card">
                     <div class="a-card-head">
-                        <h3><i class="fas fa-chart-bar" style="color:var(--blue);margin-right:6px;"></i>LOT별 입찰 현황 요약</h3>
+                        <h3><i class="fas fa-chart-bar" style="color:var(--blue);margin-right:6px;"></i>건별 입찰 현황 요약</h3>
                         <span style="font-size:11.5px;color:var(--text-light);">실시간 경쟁 현황</span>
                     </div>
                     <div style="padding:0;" id="bid-summary"></div>
@@ -1598,12 +1598,32 @@
                             <thead>
                                 <tr>
                                     <th>접수일</th><th>회사명</th><th>담당자</th>
-                                    <th>LOT</th><th>타입</th><th>수량</th>
+                                    <th>번호</th><th>타입</th><th>수량</th>
                                     <th>입찰단가</th><th>총액(USD)</th><th>연락처</th>
                                     <th>조회코드</th><th>상태</th>
                                 </tr>
                             </thead>
                             <tbody id="bids-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUBSCRIBERS TABLE -->
+                <div class="a-card" style="margin-top:1.5rem;">
+                    <div class="a-card-head">
+                        <h3><i class="fas fa-bell" style="color:#fbbf24; margin-right:6px;"></i>알림 신청자 목록</h3>
+                        <span id="sub-count-badge" style="font-size:11.5px;color:var(--text-light);">로딩 중...</span>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>신청일</th><th>회사명</th><th>담당자</th><th>이메일</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sub-list-body">
+                                <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-mid);">로딩 중...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -1756,12 +1776,12 @@
 <div class="sub-overlay" id="sub-ov">
     <div class="sub-box">
         <div class="sub-head">
-            <h3><i class="fas fa-bell" style="margin-right:8px;color:#fbbf24;"></i>신규 LOT 알림 신청</h3>
+            <h3><i class="fas fa-bell" style="margin-right:8px;color:#fbbf24;"></i>신규 매각건 알림 신청</h3>
             <button onclick="closeSubscribe()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;"><i class="fas fa-times"></i></button>
         </div>
         <div class="sub-body">
             <p style="font-size:13px;color:var(--text-mid);margin-bottom:1.25rem;">
-                새 매각 LOT가 등록되면 이메일로 알림을 받을 수 있습니다.
+                새 매각건이 등록되면 이메일로 알림을 받을 수 있습니다.
             </p>
             <div class="form-group">
                 <label class="form-label">회사명 <span class="req">*</span></label>
@@ -1921,7 +1941,7 @@ function renderBuyer() {
     document.getElementById('hero-stats').innerHTML = `
         <div class="hero-stat"><div class="val">${units.toLocaleString()}</div><div class="lbl">총 매각 Units</div></div>
         <div class="hero-stat" style="padding-left:36px; border-left:1px solid rgba(255,255,255,0.09);">
-            <div class="val">${active.length}</div><div class="lbl">활성 LOT</div></div>
+            <div class="val">${active.length}</div><div class="lbl">활성 건</div></div>
         <div class="hero-stat" style="padding-left:36px; border-left:1px solid rgba(255,255,255,0.09);">
             <div class="val">${regs}</div><div class="lbl">권역 수</div></div>
         <div class="hero-stat" style="padding-left:36px; border-left:1px solid rgba(255,255,255,0.09);">
@@ -2004,7 +2024,7 @@ function applyAll() {
     if (!list.length) {
         grid.innerHTML = `<div class="empty">
             <i class="fas fa-box-open"></i>
-            <h3>해당 조건의 매각 LOT가 없습니다</h3>
+            <h3>해당 조건의 매각건이 없습니다</h3>
             <p>필터를 조정하거나 <span onclick="resetFilters()" style="color:var(--blue);cursor:pointer;font-weight:700;">초기화</span> 해보세요</p>
         </div>`;
         return;
@@ -2160,16 +2180,16 @@ function openMultiBid() {
     bidLot = selList;
 
     document.getElementById('modal-title').innerHTML =
-        `<i class="fas fa-layer-group" style="margin-right:8px;color:var(--gold);"></i>일괄 입찰 의뢰서 (${selList.length}개 LOT)`;
+        `<i class="fas fa-layer-group" style="margin-right:8px;color:var(--gold);"></i>일괄 입찰 의뢰서 (${selList.length}건)`;
 
     document.getElementById('lot-sum').innerHTML = `
         <h3><i class="fas fa-list-check" style="margin-right:6px;color:var(--blue);"></i>
-            선택 LOT ${selList.length}개 — LOT별 희망 수량·단가를 입력해주세요
+            선택 ${selList.length}건 — 건별 희망 수량·단가를 입력해주세요
         </h3>
         <div style="overflow-x:auto;">
             <table class="multi-lot-tbl">
                 <thead><tr>
-                    <th>LOT</th><th>항구</th><th>타입</th><th>상태</th>
+                    <th>번호</th><th>항구</th><th>타입</th><th>상태</th>
                     <th>가용수량</th><th>희망수량 *</th><th>입찰단가(USD/Unit) *</th>
                 </tr></thead>
                 <tbody>
@@ -2258,7 +2278,7 @@ function submitBid() {
             rows.push({ l, qty: Number(qty), price: Number(price) });
         });
         if (!allFilled) {
-            alert('모든 LOT의 희망 수량과 입찰 단가를 입력해주세요.'); return;
+            alert('모든 건의 희망 수량과 입찰 단가를 입력해주세요.'); return;
         }
 
         const lotLines = rows.map((r,i) =>
@@ -2266,13 +2286,13 @@ function submitBid() {
         ).join('\n');
         const grandTotal = rows.reduce((s,r) => s + r.qty*r.price, 0);
 
-        subject = `[DP매각 일괄입찰] ${co} — ${rows.length}개 LOT`;
+        subject = `[DP매각 일괄입찰] ${co} — ${rows.length}건`;
         body = `안녕하세요, 장금상선·흥아라인 장비팀 귀중.
 
 아래와 같이 컨테이너 일괄 매입 입찰 의뢰 드립니다.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[일괄 입찰 LOT 목록 — ${rows.length}개]
+[일괄 입찰 목록 — ${rows.length}건]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${lotLines}
 
@@ -2337,7 +2357,7 @@ ${co}  ${nm}  드림`;
 아래와 같이 컨테이너 매입 입찰 의뢰 드립니다.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[입찰 LOT 정보]
+[입찰 건 정보]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 지역 / 항구  : ${lot.region} / ${lot.port}
 컨테이너     : ${lot.type}  (${TYPE_NAME[lot.type]||''})
@@ -2458,6 +2478,7 @@ async function renderAdmin() {
     renderLots();
     renderSummary();
     renderBids();
+    renderSubscribers();
 }
 
 function renderAdmin_KPI() {
@@ -2466,7 +2487,7 @@ function renderAdmin_KPI() {
     const tv     = active.filter(l=>l.price).reduce((s,l)=>s+l.price*l.qty,0);
     document.getElementById('kpi').innerHTML = `
         <div class="kpi-card"><div class="kpi-icon blue"><i class="fas fa-boxes"></i></div>
-            <div><div class="kpi-val">${active.length}</div><div class="kpi-lbl">활성 LOT</div></div></div>
+            <div><div class="kpi-val">${active.length}</div><div class="kpi-lbl">활성 건</div></div></div>
         <div class="kpi-card"><div class="kpi-icon gold"><i class="fas fa-cubes"></i></div>
             <div><div class="kpi-val">${units.toLocaleString()}</div><div class="kpi-lbl">총 Units</div></div></div>
         <div class="kpi-card"><div class="kpi-icon green"><i class="fas fa-envelope-open-text"></i></div>
@@ -2481,7 +2502,7 @@ function renderSummary() {
     if (!container) return;
     const activeLots = lots.filter(l => l.active);
     if (!activeLots.length) {
-        container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-mid);">등록된 LOT가 없습니다</div>`;
+        container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-mid);">등록된 건이 없습니다</div>`;
         return;
     }
     const rows = activeLots.map(lot => {
@@ -2524,7 +2545,7 @@ function renderSummary() {
     <div class="tbl-wrap">
         <table class="summary-table">
             <thead><tr>
-                <th>LOT</th><th>항구</th><th>타입</th><th>희망단가</th>
+                <th>번호</th><th>항구</th><th>타입</th><th>희망단가</th>
                 <th>입찰건수</th><th>입찰 업체</th><th>최고 입찰가</th><th>최저 입찰가</th><th>달성률</th><th>마감일</th>
             </tr></thead>
             <tbody>${rows}</tbody>
@@ -2537,7 +2558,7 @@ function renderLots() {
         .slice().sort((a, b) => a.id.localeCompare(b.id));
     const tbody = document.getElementById('lots-body');
     if (!show.length) {
-        tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-mid);">등록된 LOT가 없습니다</td></tr>`;
+        tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-mid);">등록된 건이 없습니다</td></tr>`;
         return;
     }
     const CCLS = { IICL:'cond-iicl', CWO:'cond-cwo', 'AS-IS':'cond-asis' };
@@ -2630,7 +2651,7 @@ async function toggleLot(id) {
     }
 }
 async function delLot(id) {
-    if (!confirm('이 LOT를 삭제하시겠습니까?')) return;
+    if (!confirm('이 건을 삭제하시겠습니까?')) return;
     await sbDeleteLot(id);
     lots = lots.filter(x=>x.id!==id);
     localStorage.setItem('dp_lots', JSON.stringify(lots));
@@ -2680,7 +2701,7 @@ function printBids() {
         </div>
         <table>
             <thead><tr>
-                <th>#</th><th>접수일</th><th>LOT ID</th><th>회사명</th><th>담당자</th>
+                <th>#</th><th>접수일</th><th>건 번호</th><th>회사명</th><th>담당자</th>
                 <th>항구 / 타입</th><th>수량</th><th>단가</th><th>소계</th><th>인도조건</th><th>연락처</th>
             </tr></thead>
             <tbody>${rows}</tbody>
@@ -2738,6 +2759,30 @@ function checked(cls){ return [...document.querySelectorAll(`.${cls}:checked`)].
 function goTo(id){ document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
 
 /* ── 입찰 코드 발급 ── */
+
+async function renderSubscribers() {
+    const tbody = document.getElementById('sub-list-body');
+    const badge = document.getElementById('sub-count-badge');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1rem;color:var(--text-light);">불러오는 중...</td></tr>';
+    const res = await sbLoadSubscribers();
+    const subs = res.ok ? res.data : JSON.parse(localStorage.getItem('dp_subscribers') || '[]');
+    if (badge) badge.textContent = `총 ${subs.length}명`;
+    if (!subs.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-mid);">신청자가 없습니다</td></tr>';
+        return;
+    }
+    tbody.innerHTML = subs.map(s => {
+        const d = s.created ? s.created.slice(0,10) : '—';
+        return `<tr>
+            <td>${d}</td>
+            <td>${s.company||'—'}</td>
+            <td>${s.name||'—'}</td>
+            <td><a href="mailto:${s.email}" style="color:var(--blue);">${s.email||'—'}</a></td>
+        </tr>`;
+    }).join('');
+}
+
 function genBidCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 혼동 문자 제외(0,O,I,1)
     let code = 'BID-';
@@ -2798,7 +2843,7 @@ async function searchByCode() {
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
                     <tr><td style="padding:6px 0;color:var(--text-light);width:35%;">접수일</td><td style="font-weight:600;">${data.created || '—'}</td></tr>
                     <tr><td style="padding:6px 0;color:var(--text-light);">항구 / 타입</td><td style="font-weight:600;">${data.port || '—'} / ${data.type || '—'}</td></tr>
-                    ${lotInfo ? `<tr><td style="padding:6px 0;color:var(--text-light);">LOT 마감일</td><td style="font-weight:600;">${lotInfo.deadline}</td></tr>` : ''}
+                    ${lotInfo ? `<tr><td style="padding:6px 0;color:var(--text-light);">마감일</td><td style="font-weight:600;">${lotInfo.deadline}</td></tr>` : ''}
                     <tr><td style="padding:6px 0;color:var(--text-light);">입찰 수량</td><td style="font-weight:600;">${data.qty ? data.qty.toLocaleString()+' Units' : '—'}</td></tr>
                     <tr><td style="padding:6px 0;color:var(--text-light);">입찰 단가</td><td style="font-weight:600;">${data.price ? 'USD '+data.price.toLocaleString() : '—'}</td></tr>
                     <tr><td style="padding:6px 0;color:var(--text-light);">인도 조건</td><td style="font-weight:600;">${data.inco || '—'}</td></tr>
@@ -2929,7 +2974,7 @@ async function submitSubscribe() {
         created: new Date().toISOString().slice(0, 10)
     };
     await sbSaveSubscriber(sub);
-    alert(`✅ 알림 신청이 완료되었습니다!\n새 LOT 등록 시 ${email}로 안내 드립니다.`);
+    alert(`✅ 알림 신청이 완료되었습니다!\n새 건 등록 시 ${email}로 안내 드립니다.`);
     closeSubscribe();
     document.getElementById('sub-company').value = '';
     document.getElementById('sub-name').value = '';
