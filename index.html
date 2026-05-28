@@ -2534,7 +2534,7 @@ function renderSummary() {
 
 function renderLots() {
     const show = (tabState==='active' ? lots.filter(l=>l.active) : lots)
-        .slice().sort((a, b) => b.id.localeCompare(a.id));
+        .slice().sort((a, b) => a.id.localeCompare(b.id));
     const tbody = document.getElementById('lots-body');
     if (!show.length) {
         tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-mid);">등록된 LOT가 없습니다</td></tr>`;
