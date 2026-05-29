@@ -2085,7 +2085,7 @@ function renderCard(lot) {
         <div class="card-location">
             <i class="fas fa-map-marker-alt"></i>
             <strong>${lot.region}</strong> · ${lot.port}
-            <span class="lot-id">${lot.id}</span>
+            <span class="lot-id">${fmtId(lot.id)}</span>
         </div>
         ${minQty ? `<div class="min-qty-badge"><i class="fas fa-layer-group" style="margin-right:4px;"></i>최소 ${minQty.toLocaleString()}U 이상 입찰</div>` : ''}
         <div class="card-specs">
@@ -2194,7 +2194,7 @@ function openMultiBid() {
                 </tr></thead>
                 <tbody>
                     ${selList.map(l => `<tr>
-                        <td><strong>${l.id}</strong></td>
+                        <td><strong>${fmtId(l.id)}</strong></td>
                         <td>${l.port}</td>
                         <td><strong>${l.type}</strong></td>
                         <td>${l.condition}</td>
@@ -2222,7 +2222,7 @@ function openBid(id) {
         <h3><i class="fas fa-box" style="margin-right:6px; color:var(--blue);"></i>
             ${lot.type} — ${lot.port} (${lot.region})
         </h3>
-        <div class="lot-meta">${TYPE_NAME[lot.type]||lot.type} &nbsp;·&nbsp; 등급: ${lot.condition} &nbsp;·&nbsp; ${lot.id}</div>
+        <div class="lot-meta">${TYPE_NAME[lot.type]||lot.type} &nbsp;·&nbsp; 등급: ${lot.condition} &nbsp;·&nbsp; ${fmtId(lot.id)}</div>
         <div class="lot-specs">
             <div class="lot-spec">
                 <div class="v">${lot.qty.toLocaleString()} Units</div>
@@ -2282,7 +2282,7 @@ function submitBid() {
         }
 
         const lotLines = rows.map((r,i) =>
-            `  ${i+1}. ${r.l.id} | ${r.l.port} ${r.l.type} | 수량: ${r.qty.toLocaleString()} Units | 단가: USD ${r.price.toLocaleString()} | 소계: USD ${(r.qty*r.price).toLocaleString()}`
+            `  ${i+1}. ${fmtId(r.l.id)} | ${r.l.port} ${r.l.type} | 수량: ${r.qty.toLocaleString()} Units | 단가: USD ${r.price.toLocaleString()} | 소계: USD ${(r.qty*r.price).toLocaleString()}`
         ).join('\n');
         const grandTotal = rows.reduce((s,r) => s + r.qty*r.price, 0);
 
@@ -2524,7 +2524,7 @@ function renderSummary() {
             : `<span style="color:var(--text-light);font-size:11px;">대기중</span>`;
         return `
         <tr>
-            <td><strong>${lot.id}</strong></td>
+            <td><strong>${fmtId(lot.id)}</strong></td>
             <td><strong>${lot.port}</strong><br><span style="font-size:11px;color:var(--text-light);">${lot.region}</span></td>
             <td><strong>${lot.type}</strong></td>
             <td>${lot.price ? 'USD '+lot.price.toLocaleString() : '협의'}</td>
@@ -2564,7 +2564,7 @@ function renderLots() {
     const CCLS = { IICL:'cond-iicl', CWO:'cond-cwo', 'AS-IS':'cond-asis' };
     tbody.innerHTML = show.map(l=>`
         <tr>
-            <td><strong>${l.id}</strong></td>
+            <td><strong>${fmtId(l.id)}</strong></td>
             <td><strong>${l.port}</strong><br><span style="font-size:11px;color:var(--text-light);">${l.region}</span></td>
             <td><strong>${l.type}</strong></td>
             <td>${l.qty.toLocaleString()} U</td>
@@ -2664,7 +2664,7 @@ function printBids() {
         <tr>
             <td>${i+1}</td>
             <td>${b.created}</td>
-            <td><strong>${b.lotId||'—'}</strong></td>
+            <td><strong>${fmtId(b.lotId)||'—'}</strong></td>
             <td><strong>${b.company}</strong></td>
             <td>${b.name}</td>
             <td>${b.port} / ${b.type}</td>
@@ -2749,7 +2749,12 @@ async function addLot(e) {
     e.target.reset();
     document.getElementById('n-port').innerHTML='<option value="">지역 먼저 선택</option>';
     renderAdmin();
-    alert(`✅ ${lot.id} 등록 완료!\n${lot.region} / ${lot.port} · ${lot.type} · ${lot.qty.toLocaleString()} Units`);
+    alert(`✅ ${fmtId(lot.id)} 등록 완료!\n${lot.region} / ${lot.port} · ${lot.type} · ${lot.qty.toLocaleString()} Units`);
+}
+
+/* ── ID 표시 변환: LOT001 → No. 001 ── */
+function fmtId(id) {
+    return id ? id.replace(/^LOT(\d+)$/, 'No. $1') : id;
 }
 
 /* ── HELPERS ── */
