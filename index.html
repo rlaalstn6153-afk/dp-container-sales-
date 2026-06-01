@@ -2280,6 +2280,12 @@ function submitBid() {
         if (!allFilled) {
             alert('모든 건의 희망 수량과 입찰 단가를 입력해주세요.'); return;
         }
+        // 최소 입찰 수량 검증
+        for (const r of rows) {
+            if (r.l.min_qty && r.l.min_qty > 1 && r.qty < r.l.min_qty) {
+                alert(`${fmtId(r.l.id)}: 최소 입찰 수량은 ${r.l.min_qty.toLocaleString()} Units 이상입니다.`); return;
+            }
+        }
 
         const lotLines = rows.map((r,i) =>
             `  ${i+1}. ${fmtId(r.l.id)} | ${r.l.port} ${r.l.type} | 수량: ${r.qty.toLocaleString()} Units | 단가: USD ${r.price.toLocaleString()} | 소계: USD ${(r.qty*r.price).toLocaleString()}`
@@ -2632,6 +2638,21 @@ async function updateBidStatus(bidId, status) {
     }
     localStorage.setItem('dp_bids', JSON.stringify(bids));
     renderSummary();
+    showToast(`상태 변경: ${status}`);
+}
+
+function showToast(msg) {
+    let t = document.getElementById('_toast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = '_toast';
+        t.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;';
+        document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.opacity = '0'; }, 1800);
 }
 
 function switchTab(t) {
@@ -2770,22 +2791,28 @@ async function renderSubscribers() {
     const badge = document.getElementById('sub-count-badge');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1rem;color:var(--text-light);">불러오는 중...</td></tr>';
-    const res = await sbLoadSubscribers();
-    const subs = res.ok ? res.data : JSON.parse(localStorage.getItem('dp_subscribers') || '[]');
-    if (badge) badge.textContent = `총 ${subs.length}명`;
-    if (!subs.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-mid);">신청자가 없습니다</td></tr>';
-        return;
+    try {
+        const res = await sbLoadSubscribers();
+        const subs = res.ok ? res.data : JSON.parse(localStorage.getItem('dp_subscribers') || '[]');
+        if (badge) badge.textContent = `총 ${subs.length}명`;
+        if (!subs.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-mid);">신청자가 없습니다</td></tr>';
+            return;
+        }
+        tbody.innerHTML = subs.map(s => {
+            const d = s.created ? s.created.slice(0,10) : '—';
+            return `<tr>
+                <td>${d}</td>
+                <td>${s.company||'—'}</td>
+                <td>${s.name||'—'}</td>
+                <td><a href="mailto:${s.email}" style="color:var(--blue);">${s.email||'—'}</a></td>
+            </tr>`;
+        }).join('');
+    } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1rem;color:var(--danger);">로드 실패 — 새로고침 후 재시도</td></tr>';
+        if (badge) badge.textContent = '로드 실패';
+        console.warn('[renderSubscribers]', e);
     }
-    tbody.innerHTML = subs.map(s => {
-        const d = s.created ? s.created.slice(0,10) : '—';
-        return `<tr>
-            <td>${d}</td>
-            <td>${s.company||'—'}</td>
-            <td>${s.name||'—'}</td>
-            <td><a href="mailto:${s.email}" style="color:var(--blue);">${s.email||'—'}</a></td>
-        </tr>`;
-    }).join('');
 }
 
 function genBidCode() {
