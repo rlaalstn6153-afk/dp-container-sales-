@@ -2506,7 +2506,7 @@ function renderAdmin_KPI() {
 function renderSummary() {
     const container = document.getElementById('bid-summary');
     if (!container) return;
-    const activeLots = lots.filter(l => l.active);
+    const activeLots = lots.filter(l => l.active).sort((a,b) => a.id.localeCompare(b.id));
     if (!activeLots.length) {
         container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-mid);">등록된 건이 없습니다</div>`;
         return;
